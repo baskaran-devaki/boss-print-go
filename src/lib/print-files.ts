@@ -44,7 +44,7 @@ export async function detectPages(file: File): Promise<number> {
     const pdfjs = await import("pdfjs-dist");
     const { default: workerUrl } = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
     pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-    const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false });
+    const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
     try {
       const pdf = await task.promise;
       return validatePages(pdf.numPages);
