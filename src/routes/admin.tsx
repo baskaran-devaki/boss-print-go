@@ -10,6 +10,8 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Manage print orders for BOSS PrintGo." },
       { property: "og:title", content: "Admin — BOSS PrintGo" },
       { property: "og:description", content: "Manage print orders for BOSS PrintGo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
