@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Upload, Printer, User, Receipt, CreditCard, PackageCheck, FileText, Check } from "lucide-react";
+import { Upload, Printer, User, Receipt, CreditCard, PackageCheck, FileText, Check, X, Minus, Plus, LoaderCircle } from "lucide-react";
 import { useLang, LangToggle } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { detectPages, printedSides, UploadError, type PrintFile, type UploadErrorCode } from "@/lib/print-files";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -10,6 +12,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Upload documents, pay online and pick up your prints. Fast printing for students." },
       { property: "og:title", content: "BOSS PrintGo — Upload • Pay • Pickup" },
       { property: "og:description", content: "Upload documents, pay online and pick up your prints." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -38,16 +42,39 @@ function Seg<T extends string>({ value, options, onChange }: { value: T; options
 
 function Index() {
   const { t } = useLang();
-  const [files, setFiles] = useState<string[]>(["Assignment_Unit3.pdf"]);
+  const [files, setFiles] = useState<PrintFile[]>([]);
+  const [pending, setPending] = useState(0);
+  const [errors, setErrors] = useState<{ name: string; code: UploadErrorCode }[]>([]);
   const [color, setColor] = useState<"bw" | "color">("bw");
   const [sides, setSides] = useState<"single" | "double">("single");
   const [size, setSize] = useState<"A4" | "A3">("A4");
   const [copies, setCopies] = useState(1);
   const [paid, setPaid] = useState(false);
-  const pages = files.length * 12;
+  const pages = files.reduce((sum, file) => sum + file.pages, 0);
+  const totalSides = printedSides(pages, copies);
   const per = (color === "bw" ? 1 : 5) * (size === "A3" ? 2 : 1) * (sides === "double" ? 0.8 : 1);
-  const total = Math.round(pages * per * copies);
+  const total = Math.round(totalSides * per);
   const step = paid ? 1 : 0;
+
+  async function addFiles(selected: File[]) {
+    if (!selected.length) return;
+    setPaid(false);
+    setErrors([]);
+    setPending((count) => count + selected.length);
+    // Process sequentially to avoid holding several large decoded documents at once.
+    for (const file of selected) {
+      try {
+        const count = await detectPages(file);
+        const entry = { id: crypto.randomUUID(), file, pages: count };
+        setFiles((current) => [...current, entry]);
+      } catch (error) {
+        const code = error instanceof UploadError ? error.code : "invalid";
+        setErrors((current) => [...current, { name: file.name, code }]);
+      } finally {
+        setPending((count) => count - 1);
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -65,11 +92,22 @@ function Index() {
         <Card icon={Upload} title={t.upload}>
           <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-accent/50 p-6 text-center text-sm text-muted-foreground transition hover:border-primary">
             <Upload className="h-8 w-8 text-primary" />{t.drop}
-            <input type="file" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? []).map((f) => f.name)])} />
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" multiple className="hidden" onChange={(e) => {
+              const selected = Array.from(e.target.files ?? []);
+              e.target.value = "";
+              void addFiles(selected);
+            }} />
           </label>
           <ul className="mt-3 space-y-2">
-            {files.map((f, i) => <li key={i} className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm"><FileText className="h-4 w-4 text-primary" />{f}</li>)}
+            {files.map((entry) => <li key={entry.id} className="flex min-w-0 items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm">
+              <FileText className="h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1"><p className="break-all">{entry.file.name}</p><p className="text-xs text-muted-foreground">{t.pages}: {entry.pages}</p></div>
+              <Button variant="ghost" size="icon" className="shrink-0" aria-label={`${t.remove}: ${entry.file.name}`} title={t.remove} onClick={() => { setFiles((current) => current.filter((f) => f.id !== entry.id)); setPaid(false); }}><X /></Button>
+            </li>)}
           </ul>
+          {pending > 0 && <p role="status" className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" />{t.detecting}</p>}
+          {errors.length > 0 && <ul role="alert" className="mt-3 space-y-2 text-sm text-destructive">{errors.map((error, i) => <li key={i} className="break-words"><span className="font-medium break-all">{error.name}</span>: {t.uploadErrors[error.code]}</li>)}</ul>}
+          <p className="mt-3 flex justify-between text-sm"><span className="text-muted-foreground">{t.totalPages}</span><span aria-live="polite">{pages}</span></p>
         </Card>
 
         <Card icon={Printer} title={t.settings} delay={60}>
@@ -83,9 +121,9 @@ function Index() {
             <div className="flex items-center justify-between pt-1">
               <span className="text-muted-foreground">{t.copies}</span>
               <div className="flex items-center gap-3">
-                <button className="btn-soft" onClick={() => setCopies(Math.max(1, copies - 1))}>−</button>
+                <Button variant="ghost" size="icon" className="btn-soft" aria-label="Decrease copies" disabled={copies === 1} onClick={() => { setCopies(Math.max(1, copies - 1)); setPaid(false); }}><Minus /></Button>
                 <span className="w-6 text-center font-semibold">{copies}</span>
-                <button className="btn-soft" onClick={() => setCopies(copies + 1)}>+</button>
+                <Button variant="ghost" size="icon" className="btn-soft" aria-label="Increase copies" onClick={() => { setCopies(copies + 1); setPaid(false); }}><Plus /></Button>
               </div>
             </div>
           </div>
@@ -102,6 +140,7 @@ function Index() {
             <div className="flex justify-between"><dt className="text-muted-foreground">{t.pages}</dt><dd>{pages}</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">{t.perPage}</dt><dd>₹{per.toFixed(2)}</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">{t.copies}</dt><dd>× {copies}</dd></div>
+            <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.printedSides}</dt><dd aria-live="polite">{totalSides}</dd></div>
             <div className="flex justify-between border-t border-border pt-3 font-display text-2xl font-bold text-primary"><dt>{t.total}</dt><dd>₹{total}</dd></div>
           </dl>
         </Card>
@@ -110,7 +149,7 @@ function Index() {
           <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs font-medium">
             {["UPI", "GPay", "Card"].map((m) => <div key={m} className="rounded-xl border border-border py-3">{m}</div>)}
           </div>
-          <button onClick={() => setPaid(true)} className="btn-primary-pg w-full">{paid ? <><Check className="h-4 w-4" /> Paid</> : `${t.payNow} ₹${total}`}</button>
+          <Button disabled={pending > 0 || pages === 0} onClick={() => setPaid(true)} className="btn-primary-pg w-full">{paid ? <><Check className="h-4 w-4" /> {t.paid}</> : `${t.payNow} ₹${total}`}</Button>
         </Card>
 
         <Card icon={PackageCheck} title={t.track} delay={300}>

@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Customer-selected files stay in browser memory; detect pages in an event-triggered module with PDF.js and its bundled worker, so document parsing never runs during SSR or sends files to a server.
