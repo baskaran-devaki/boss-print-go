@@ -1,6 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Clock, Lock } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth-provider";
+import { AdminPricing } from "@/components/admin-pricing";
+import { Button } from "@/components/ui/button";
+import { checkAdmin } from "@/lib/pricing.functions";
+import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Clock, Lock, Settings } from "lucide-react";
 import { useLang, LangToggle } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin")({
@@ -27,28 +34,48 @@ const orders = [
 
 function Admin() {
   const { t } = useLang();
-  const [authed, setAuthed] = useState(false);
-  const [tab, setTab] = useState<"dash" | "orders">("dash");
+  const { user, loading } = useAuth();
+  const client = useQueryClient();
+  const verifyAdmin = useServerFn(checkAdmin);
+  const admin = useQuery({ queryKey: ["admin-access", user?.id], queryFn: () => verifyAdmin(), enabled: !!user });
+  const [tab, setTab] = useState<"dash" | "orders" | "pricing">("dash");
+  const [loginError, setLoginError] = useState("");
+  const [signingIn, setSigningIn] = useState(false);
   const [open, setOpen] = useState(false);
 
-  if (!authed)
+  async function logout() {
+    await client.cancelQueries(); client.clear();
+    await supabase.auth.signOut();
+  }
+  async function signIn(form: HTMLFormElement) {
+    const data = new FormData(form);
+    setSigningIn(true); setLoginError("");
+    const { error } = await supabase.auth.signInWithPassword({ email: String(data.get("email")).trim(), password: String(data.get("password")) });
+    if (error) setLoginError(error.message);
+    setSigningIn(false);
+  }
+  if (loading || (user && admin.isPending)) return <div className="grid min-h-screen place-items-center bg-background"><p role="status">{t.loadingPricing}</p></div>;
+  if (user && !admin.data) return <div className="grid min-h-screen place-items-center bg-background px-4"><div className="space-y-4 text-center"><p role="alert">{admin.error?.message || t.adminRequired}</p><Button onClick={() => void logout()}><LogOut />{t.logout}</Button><Link to="/" className="block text-primary">BOSS PrintGo</Link></div></div>;
+
+  if (!user)
     return (
       <div className="hero-pg grid min-h-screen place-items-center px-4">
-        <form onSubmit={(e) => { e.preventDefault(); setAuthed(true); }} className="card-pg w-full max-w-sm animate-rise space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); void signIn(e.currentTarget); }} className="card-pg w-full max-w-sm animate-rise space-y-4">
           <div className="flex items-center justify-between">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-primary"><Lock className="h-5 w-5" /></span>
             <LangToggle />
           </div>
           <h1 className="font-display text-2xl font-bold">{t.login}</h1>
-          <input required type="email" placeholder={t.email} className="input-pg" />
-          <input required type="password" placeholder={t.password} className="input-pg" />
-          <button className="btn-primary-pg w-full">{t.signIn}</button>
+          <input required name="email" autoComplete="username" type="email" placeholder={t.email} aria-label={t.email} className="input-pg" />
+          <input required name="password" autoComplete="current-password" type="password" placeholder={t.password} aria-label={t.password} className="input-pg" />
+          {loginError && <p role="alert" className="text-sm text-destructive">{loginError}</p>}
+          <Button disabled={signingIn} className="btn-primary-pg w-full">{t.signIn}</Button>
           <Link to="/" className="block text-center text-xs text-muted-foreground underline">BOSS PrintGo</Link>
         </form>
       </div>
     );
 
-  const nav = [{ k: "dash" as const, l: t.dashboard, i: LayoutDashboard }, { k: "orders" as const, l: t.orders, i: ListOrdered }];
+  const nav = [{ k: "dash" as const, l: t.dashboard, i: LayoutDashboard }, { k: "orders" as const, l: t.orders, i: ListOrdered }, { k: "pricing" as const, l: t.pricingSettings, i: Settings }];
   return (
     <div className="flex min-h-screen w-full bg-background">
       <aside className={`fixed inset-y-0 left-0 z-20 w-64 bg-sidebar p-4 text-sidebar-foreground transition-transform md:static md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
@@ -59,16 +86,17 @@ function Admin() {
               <n.i className="h-4 w-4" />{n.l}
             </button>
           ))}
-          <button onClick={() => setAuthed(false)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm opacity-80"><LogOut className="h-4 w-4" />{t.logout}</button>
+          <Button variant="ghost" onClick={() => void logout()} className="flex w-full items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm opacity-80"><LogOut className="h-4 w-4" />{t.logout}</Button>
         </nav>
       </aside>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
           <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu"><Menu className="h-5 w-5" /></button>
-          <h1 className="font-display font-semibold">{tab === "dash" ? t.dashboard : t.orders}</h1>
+          <h1 className="font-display font-semibold">{tab === "dash" ? t.dashboard : tab === "pricing" ? t.pricingSettings : t.orders}</h1>
           <LangToggle />
         </header>
         <main className="space-y-4 p-4">
+          {tab === "pricing" ? <AdminPricing /> : <>
           {tab === "dash" && (
             <div className="grid gap-4 sm:grid-cols-3">
               {[[t.orders, "128", ListOrdered], [t.revenue, "₹4,820", IndianRupee], [t.pending, "9", Clock]].map(([l, v, I]: any) => (
@@ -84,6 +112,7 @@ function Admin() {
               ))}</tbody>
             </table>
           </div>
+          </>}
         </main>
       </div>
     </div>
