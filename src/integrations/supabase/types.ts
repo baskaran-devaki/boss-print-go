@@ -14,16 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      service_pricing: {
+        Row: {
+          available: boolean
+          bulk_rate: number
+          bulk_threshold: number
+          color_mode: string
+          id: string
+          paper_size: string
+          service: string
+          standard_rate: number
+        }
+        Insert: {
+          available?: boolean
+          bulk_rate: number
+          bulk_threshold?: number
+          color_mode?: string
+          id?: string
+          paper_size?: string
+          service: string
+          standard_rate: number
+        }
+        Update: {
+          available?: boolean
+          bulk_rate?: number
+          bulk_threshold?: number
+          color_mode?: string
+          id?: string
+          paper_size?: string
+          service?: string
+          standard_rate?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      customer_pricing: {
+        Args: never
+        Returns: {
+          available: boolean
+          bulk_rate: number
+          bulk_threshold: number
+          color_mode: string
+          id: string
+          paper_size: string
+          service: string
+          standard_rate: number
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      quote_print: {
+        Args: {
+          _color_mode: string
+          _copies: number
+          _pages: number
+          _paper_size: string
+          _service: string
+        }
+        Returns: {
+          applicable_rate: number
+          total_amount: number
+          total_sides: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +233,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
