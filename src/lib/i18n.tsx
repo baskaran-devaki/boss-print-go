@@ -1,0 +1,38 @@
+import { createContext, useContext, useState, type ReactNode } from "react";
+
+type Lang = "en" | "ta";
+const dict = {
+  en: {
+    tagline: "Upload • Pay • Pickup", upload: "Upload Files", drop: "Tap to choose PDF, DOC or images",
+    settings: "Print Settings", color: "Color", bw: "Black & White", colorful: "Color",
+    copies: "Copies", sides: "Sides", single: "Single", double: "Double", size: "Paper Size",
+    details: "Your Details", name: "Name", phone: "Phone", college: "College / Dept",
+    summary: "Price Summary", pages: "Pages", perPage: "Per page", total: "Total",
+    payment: "Payment", payNow: "Pay Now", track: "Track Order", status: ["Received", "Printing", "Ready", "Picked up"],
+    admin: "Admin", login: "Admin Login", email: "Email", password: "Password", signIn: "Sign in",
+    orders: "Orders", dashboard: "Dashboard", revenue: "Revenue", pending: "Pending", logout: "Log out",
+  },
+  ta: {
+    tagline: "பதிவேற்று • செலுத்து • பெறு", upload: "கோப்புகளை பதிவேற்றவும்", drop: "PDF, DOC அல்லது படங்களை தேர்வு செய்ய தட்டவும்",
+    settings: "அச்சு அமைப்புகள்", color: "நிறம்", bw: "கருப்பு வெள்ளை", colorful: "வண்ணம்",
+    copies: "நகல்கள்", sides: "பக்கங்கள்", single: "ஒரு பக்கம்", double: "இரு பக்கம்", size: "காகித அளவு",
+    details: "உங்கள் விவரங்கள்", name: "பெயர்", phone: "தொலைபேசி", college: "கல்லூரி / துறை",
+    summary: "விலை சுருக்கம்", pages: "பக்கங்கள்", perPage: "ஒரு பக்கம்", total: "மொத்தம்",
+    payment: "கட்டணம்", payNow: "இப்போது செலுத்து", track: "ஆர்டர் நிலை", status: ["பெறப்பட்டது", "அச்சிடுகிறது", "தயார்", "பெறப்பட்டது ✓"],
+    admin: "நிர்வாகம்", login: "நிர்வாக உள்நுழைவு", email: "மின்னஞ்சல்", password: "கடவுச்சொல்", signIn: "உள்நுழை",
+    orders: "ஆர்டர்கள்", dashboard: "டாஷ்போர்டு", revenue: "வருவாய்", pending: "நிலுவையில்", logout: "வெளியேறு",
+  },
+};
+type Dict = typeof dict.en;
+const Ctx = createContext<{ lang: Lang; t: Dict; toggle: () => void }>({ lang: "en", t: dict.en, toggle: () => {} });
+
+export function LangProvider({ children }: { children: ReactNode }) {
+  const [lang, setLang] = useState<Lang>("en");
+  return <Ctx.Provider value={{ lang, t: dict[lang] as Dict, toggle: () => setLang(lang === "en" ? "ta" : "en") }}>{children}</Ctx.Provider>;
+}
+export const useLang = () => useContext(Ctx);
+
+export function LangToggle() {
+  const { lang, toggle } = useLang();
+  return <button onClick={toggle} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-primary">{lang === "en" ? "தமிழ்" : "English"}</button>;
+}

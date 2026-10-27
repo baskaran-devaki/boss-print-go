@@ -26,6 +26,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --font-display: "Sora", sans-serif;
+  --font-sans: "Manrope", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -62,39 +64,41 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 1rem;
+  --background: oklch(0.975 0.01 250);
+  --foreground: oklch(0.22 0.05 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.22 0.05 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.22 0.05 260);
+  --primary: oklch(0.52 0.2 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.02 250);
+  --secondary-foreground: oklch(0.3 0.08 260);
+  --muted: oklch(0.955 0.012 250);
+  --muted-foreground: oklch(0.52 0.04 258);
+  --accent: oklch(0.93 0.04 250);
+  --accent-foreground: oklch(0.4 0.15 258);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.91 0.02 250);
+  --input: oklch(0.91 0.02 250);
+  --ring: oklch(0.52 0.2 258);
+  --chart-1: oklch(0.52 0.2 258);
+  --chart-2: oklch(0.65 0.15 230);
+  --chart-3: oklch(0.4 0.12 260);
+  --chart-4: oklch(0.8 0.1 240);
+  --chart-5: oklch(0.7 0.12 200);
+  --sidebar: oklch(0.3 0.12 262);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.52 0.2 258);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.99 0 0);
+  --sidebar-accent-foreground: oklch(0.4 0.15 258);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.52 0.2 258);
+  --gradient-hero: linear-gradient(135deg, oklch(0.45 0.2 262), oklch(0.6 0.17 240));
+  --shadow-card: 0 12px 32px -16px oklch(0.45 0.2 262 / 0.35);
 }
 
 .dark {
@@ -142,3 +146,14 @@
     color: var(--color-foreground);
   }
 }
+
+body { font-family: var(--font-sans); }
+.hero-pg { background: var(--gradient-hero); }
+.card-pg { background: var(--card); border: 1px solid var(--border); border-radius: 1.5rem; padding: 1.25rem; box-shadow: var(--shadow-card); }
+.input-pg { width: 100%; border-radius: 0.875rem; border: 1px solid var(--input); background: var(--muted); padding: 0.75rem 1rem; font-size: 0.875rem; outline: none; transition: all .2s; }
+.input-pg:focus { border-color: var(--primary); background: var(--card); }
+.btn-primary-pg { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: 0.875rem; background: var(--gradient-hero); color: var(--primary-foreground); padding: 0.85rem 1rem; font-weight: 600; transition: transform .15s; }
+.btn-primary-pg:active, .btn-soft:active { transform: scale(.96); }
+.btn-soft { height: 2rem; width: 2rem; border-radius: 0.6rem; background: var(--accent); color: var(--primary); font-weight: 700; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.animate-rise { animation: rise .5s ease-out both; }
