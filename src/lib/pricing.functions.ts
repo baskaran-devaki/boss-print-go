@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { pricingSchema, quoteSchema } from "./pricing";
+import { pricingSchema, quoteSchema, requireAdminAccess } from "./pricing";
 
 export const getCustomerPricing = createServerFn({ method: "GET" }).handler(async () => {
   const url = process.env['SUPABASE_URL'];
@@ -53,7 +53,7 @@ export const checkAdmin = createServerFn({ method: "POST" }).middleware([require
 
 export const getAdminPricing = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-  if (!allowed) throw new Error("Admin access required");
+  requireAdminAccess(allowed);
   const { data, error } = await context.supabase.from("service_pricing").select("*").order("service").order("paper_size");
   if (error) throw new Error("Could not load pricing");
   return data ?? [];
@@ -63,7 +63,7 @@ export const savePricing = createServerFn({ method: "POST" }).middleware([requir
   .inputValidator((input) => z.object({ id: z.string().uuid().optional(), pricing: pricingSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!allowed) throw new Error("Admin access required");
+    requireAdminAccess(allowed);
     const query = data.id
       ? context.supabase.from("service_pricing").update(data.pricing).eq("id", data.id)
       : context.supabase.from("service_pricing").insert(data.pricing);
@@ -76,7 +76,7 @@ export const deletePricing = createServerFn({ method: "POST" }).middleware([requ
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!allowed) throw new Error("Admin access required");
+    requireAdminAccess(allowed);
     const { data: row, error } = await context.supabase.from("service_pricing").delete().eq("id", data.id).select("id").single();
     if (error || !row) throw new Error("Could not delete pricing");
     return { deleted: true };

@@ -10,6 +10,9 @@ export const pricingSchema = z.object({
   available: z.boolean(),
 });
 export type PricingInput = z.infer<typeof pricingSchema>;
+export function requireAdminAccess(isAdmin: unknown) {
+  if (isAdmin !== true) throw new Error("Admin access required");
+}
 export type Pricing = Omit<PricingInput, "service" | "paper_size" | "color_mode"> & { id: string; service: string; paper_size: string; color_mode: string };
 export const quoteSchema = z.object({
   service: z.enum(["xerox", "printout"]), paperSize: z.enum(["A4", "A3"]), colorMode: z.enum(["bw", "color"]),
