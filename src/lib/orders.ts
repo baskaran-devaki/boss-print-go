@@ -1,0 +1,84 @@
+import { z } from "zod";
+
+export const PAYMENT_STATUSES = ["pending_verification", "verified", "rejected"] as const;
+export const ORDER_STATUSES = ["received", "printing", "ready", "picked_up"] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+const optionalDigits = z.preprocess(
+  (value) => (typeof value === "string" ? (value.trim() === "" ? undefined : value.trim()) : value),
+  z.string().regex(/^[0-9]{10}$/).optional(),
+);
+
+export const submitOrderSchema = z.object({
+  customerName: z.string().trim().min(1).max(100),
+  mobile: optionalDigits,
+  service: z.enum(["xerox", "printout"]),
+  paperSize: z.enum(["A4", "A3"]),
+  colorMode: z.enum(["bw", "color"]),
+  pages: z.number().int().min(1).max(100000),
+  copies: z.number().int().min(1).max(10000),
+  utr: z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/),
+  filePaths: z.array(z.string().min(1).max(300)).min(1).max(500),
+  screenshotPath: z.string().min(1).max(300).optional(),
+  expectedTotal: z.number().multipleOf(0.01).min(0).max(10000000),
+});
+
+export const trackOrderSchema = z.object({ token: z.string().regex(/^[a-f0-9]{48}$/) });
+
+export const orderUpdateSchema = z.object({
+  id: z.string().uuid(),
+  paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
+  orderStatus: z.enum(ORDER_STATUSES).optional(),
+});
+
+export const paymentSettingsSchema = z.object({
+  upiId: z.string().trim().min(3).max(100).regex(/^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$/),
+  gpayNumber: optionalDigits,
+  payeeName: z.string().trim().min(1).max(60),
+  qrImage: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().startsWith("data:image/").max(500000).optional(),
+  ),
+});
+
+export type SubmitOrderInput = z.infer<typeof submitOrderSchema>;
+export type PaymentSettingsInput = z.infer<typeof paymentSettingsSchema>;
+
+export type OrderSummary = {
+  id: string;
+  orderCode: string;
+  customerName: string;
+  mobile: string | null;
+  service: string;
+  paperSize: string;
+  colorMode: string;
+  pages: number;
+  copies: number;
+  totalSides: number;
+  totalAmount: number;
+  utr: string;
+  filePaths: string[];
+  screenshotPath: string | null;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  createdAt: string;
+};
+
+export type PaymentSettings = { upiId: string; gpayNumber: string; payeeName: string; qrImage: string | null };
+
+export type TrackedOrder = {
+  orderCode: string;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  totalAmount: number;
+  totalSides: number;
+  pages: number;
+  copies: number;
+  createdAt: string;
+};
+
+export function sanitizeFileName(name: string) {
+  const clean = name.replace(/[^A-Za-z0-9._-]+/g, "_");
+  return clean.length > 80 ? clean.slice(-80) : clean;
+}
