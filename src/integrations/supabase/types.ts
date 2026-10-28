@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      orders: {
+        Row: {
+          color_mode: string
+          copies: number
+          created_at: string
+          customer_name: string
+          file_paths: Json
+          id: string
+          mobile: string | null
+          order_code: string
+          order_status: Database["public"]["Enums"]["order_status"]
+          pages: number
+          paper_size: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          screenshot_path: string | null
+          service: string
+          total_amount: number
+          total_sides: number
+          tracking_token: string
+          updated_at: string
+          utr: string
+        }
+        Insert: {
+          color_mode: string
+          copies: number
+          created_at?: string
+          customer_name: string
+          file_paths?: Json
+          id?: string
+          mobile?: string | null
+          order_code?: string
+          order_status?: Database["public"]["Enums"]["order_status"]
+          pages: number
+          paper_size: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          screenshot_path?: string | null
+          service: string
+          total_amount: number
+          total_sides: number
+          tracking_token?: string
+          updated_at?: string
+          utr: string
+        }
+        Update: {
+          color_mode?: string
+          copies?: number
+          created_at?: string
+          customer_name?: string
+          file_paths?: Json
+          id?: string
+          mobile?: string | null
+          order_code?: string
+          order_status?: Database["public"]["Enums"]["order_status"]
+          pages?: number
+          paper_size?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          screenshot_path?: string | null
+          service?: string
+          total_amount?: number
+          total_sides?: number
+          tracking_token?: string
+          updated_at?: string
+          utr?: string
+        }
+        Relationships: []
+      }
+      payment_settings: {
+        Row: {
+          gpay_number: string
+          id: boolean
+          payee_name: string
+          qr_path: string | null
+          updated_at: string
+          upi_id: string
+        }
+        Insert: {
+          gpay_number?: string
+          id?: boolean
+          payee_name?: string
+          qr_path?: string | null
+          updated_at?: string
+          upi_id?: string
+        }
+        Update: {
+          gpay_number?: string
+          id?: boolean
+          payee_name?: string
+          qr_path?: string | null
+          updated_at?: string
+          upi_id?: string
+        }
+        Relationships: []
+      }
       service_pricing: {
         Row: {
           available: boolean
@@ -90,6 +183,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      public_payment_settings: {
+        Args: never
+        Returns: {
+          gpay_number: string
+          payee_name: string
+          qr_path: string
+          updated_at: string
+          upi_id: string
+        }[]
+      }
       quote_print: {
         Args: {
           _color_mode: string
@@ -104,9 +207,24 @@ export type Database = {
           total_sides: number
         }[]
       }
+      track_order: {
+        Args: { _token: string }
+        Returns: {
+          copies: number
+          created_at: string
+          order_code: string
+          order_status: Database["public"]["Enums"]["order_status"]
+          pages: number
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          total_amount: number
+          total_sides: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      order_status: "received" | "printing" | "ready" | "picked_up"
+      payment_status: "pending_verification" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -235,6 +353,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      order_status: ["received", "printing", "ready", "picked_up"],
+      payment_status: ["pending_verification", "verified", "rejected"],
     },
   },
 } as const

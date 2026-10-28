@@ -8,6 +8,13 @@
       "when": 1793101937686,
       "tag": "0000_service_pricing_admin_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793196558911,
+      "tag": "0001_orders_and_payment_settings",
+      "breakpoints": true
     }
   ]
 }
