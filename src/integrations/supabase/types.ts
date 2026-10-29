@@ -85,6 +85,7 @@ export type Database = {
           gpay_number: string
           id: boolean
           payee_name: string
+          qr_image: string | null
           qr_path: string | null
           updated_at: string
           upi_id: string
@@ -93,6 +94,7 @@ export type Database = {
           gpay_number?: string
           id?: boolean
           payee_name?: string
+          qr_image?: string | null
           qr_path?: string | null
           updated_at?: string
           upi_id?: string
@@ -101,6 +103,7 @@ export type Database = {
           gpay_number?: string
           id?: boolean
           payee_name?: string
+          qr_image?: string | null
           qr_path?: string | null
           updated_at?: string
           upi_id?: string
@@ -188,7 +191,7 @@ export type Database = {
         Returns: {
           gpay_number: string
           payee_name: string
-          qr_path: string
+          qr_image: string
           updated_at: string
           upi_id: string
         }[]
