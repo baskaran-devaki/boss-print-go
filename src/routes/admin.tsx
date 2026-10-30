@@ -5,9 +5,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { AdminPricing } from "@/components/admin-pricing";
+import { AdminOrders } from "@/components/admin-orders";
+import { AdminPaymentSettings } from "@/components/admin-payment-settings";
 import { Button } from "@/components/ui/button";
 import { checkAdmin } from "@/lib/pricing.functions";
-import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Clock, Lock, Settings } from "lucide-react";
+import { getAdminOrders } from "@/lib/orders.functions";
+import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Clock, Lock, Wallet } from "lucide-react";
 import { useLang, LangToggle } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin")({
@@ -25,20 +28,21 @@ export const Route = createFileRoute("/admin")({
   component: Admin,
 });
 
-const orders = [
-  { id: "BPG-2041", name: "Priya S", pages: 24, amt: 24, status: "Printing" },
-  { id: "BPG-2040", name: "Karthik R", pages: 8, amt: 40, status: "Ready" },
-  { id: "BPG-2039", name: "Divya M", pages: 50, amt: 40, status: "Received" },
-  { id: "BPG-2038", name: "Arun K", pages: 12, amt: 12, status: "Picked up" },
-];
-
 function Admin() {
   const { t } = useLang();
   const { user, loading } = useAuth();
   const client = useQueryClient();
   const verifyAdmin = useServerFn(checkAdmin);
+  const fetchOrders = useServerFn(getAdminOrders);
   const admin = useQuery({ queryKey: ["admin-access", user?.id], queryFn: () => verifyAdmin(), enabled: !!user });
-  const [tab, setTab] = useState<"dash" | "orders" | "pricing">("dash");
+  const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: () => fetchOrders(), enabled: !!user && !!admin.data });
+  const ordersList = ordersQuery.data ?? [];
+  const orderStats = {
+    count: ordersList.length,
+    pending: ordersList.filter((o) => o.paymentStatus === "pending_verification").length,
+    revenue: ordersList.filter((o) => o.paymentStatus === "verified").reduce((sum, o) => sum + o.totalAmount, 0),
+  };
+  const [tab, setTab] = useState<"dash" | "orders" | "payments" | "pricing">("dash");
   const [loginError, setLoginError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
   const [open, setOpen] = useState(false);
@@ -75,7 +79,12 @@ function Admin() {
       </div>
     );
 
-  const nav = [{ k: "dash" as const, l: t.dashboard, i: LayoutDashboard }, { k: "orders" as const, l: t.orders, i: ListOrdered }, { k: "pricing" as const, l: t.pricingSettings, i: Settings }];
+  const nav = [
+    { k: "dash" as const, l: t.dashboard, i: LayoutDashboard },
+    { k: "orders" as const, l: t.orders, i: ListOrdered },
+    { k: "payments" as const, l: t.paymentSettings, i: Wallet },
+    { k: "pricing" as const, l: t.pricingSettings, i: IndianRupee },
+  ];
   return (
     <div className="flex min-h-screen w-full bg-background">
       <aside className={`fixed inset-y-0 left-0 z-20 w-64 bg-sidebar p-4 text-sidebar-foreground transition-transform md:static md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
@@ -92,27 +101,21 @@ function Admin() {
       <div className="min-w-0 flex-1">
         <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
           <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu"><Menu className="h-5 w-5" /></button>
-          <h1 className="font-display font-semibold">{tab === "dash" ? t.dashboard : tab === "pricing" ? t.pricingSettings : t.orders}</h1>
+          <h1 className="font-display font-semibold">{tab === "dash" ? t.dashboard : tab === "payments" ? t.paymentSettings : tab === "pricing" ? t.pricingSettings : t.orders}</h1>
           <LangToggle />
         </header>
         <main className="space-y-4 p-4">
-          {tab === "pricing" ? <AdminPricing /> : <>
-          {tab === "dash" && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[[t.orders, "128", ListOrdered], [t.revenue, "₹4,820", IndianRupee], [t.pending, "9", Clock]].map(([l, v, I]: any) => (
-                <div key={l} className="card-pg animate-rise"><I className="mb-2 h-5 w-5 text-primary" /><p className="text-sm text-muted-foreground">{l}</p><p className="font-display text-3xl font-bold">{v}</p></div>
-              ))}
-            </div>
+          {tab === "pricing" ? <AdminPricing /> : tab === "payments" ? <AdminPaymentSettings /> : tab === "orders" ? <AdminOrders /> : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[[t.orders, String(orderStats.count), ListOrdered], [t.revenue, `₹${orderStats.revenue.toLocaleString("en-IN")}`, IndianRupee], [t.pending, String(orderStats.pending), Clock]].map(([l, v, I]: any) => (
+                  <div key={l} className="card-pg animate-rise"><I className="mb-2 h-5 w-5 text-primary" /><p className="text-sm text-muted-foreground">{l}</p><p className="font-display text-3xl font-bold">{v}</p></div>
+                ))}
+              </div>
+              {ordersQuery.isPending && <p role="status">{t.loadingOrders}</p>}
+              {ordersQuery.error && <p role="alert" className="text-sm text-destructive">{ordersQuery.error.message}</p>}
+            </>
           )}
-          <div className="card-pg overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-muted-foreground"><tr><th className="py-2">ID</th><th>{t.name}</th><th>{t.pages}</th><th>₹</th><th>Status</th></tr></thead>
-              <tbody>{orders.map((o) => (
-                <tr key={o.id} className="border-t border-border"><td className="py-3 font-medium">{o.id}</td><td>{o.name}</td><td>{o.pages}</td><td>{o.amt}</td><td><span className="rounded-full bg-accent px-2 py-1 text-xs text-primary">{o.status}</span></td></tr>
-              ))}</tbody>
-            </table>
-          </div>
-          </>}
         </main>
       </div>
     </div>

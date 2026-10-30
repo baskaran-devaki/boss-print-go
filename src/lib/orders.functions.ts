@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -30,7 +30,7 @@ function publicClient() {
   });
 }
 
-async function requireAdmin(context: { supabase: Database["public"]["Tables"] extends never ? never : any; userId: string }) {
+async function requireAdmin(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
   requireAdminAccess(allowed);
 }

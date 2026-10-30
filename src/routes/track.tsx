@@ -1,17 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { trackOrder, type TrackedOrder } from "@/lib/orders.functions";
-import { ORDER_STATUSES } from "@/lib/orders";
+import { trackOrder } from "@/lib/orders.functions";
+import { ORDER_STATUSES, type TrackedOrder } from "@/lib/orders";
 import { useLang } from "@/lib/i18n";
 import { PackageCheck, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/track")({
   validateSearch: (search: Record<string, unknown>) => ({
-    t: typeof search.t === "string" && /^[a-f0-9]{48}$/.test(search.t) ? search.t : undefined,
+    t: typeof search["t"] === "string" && /^[a-f0-9]{48}$/.test(search["t"]) ? search["t"] : undefined,
   }),
-  loader: async ({ search }): Promise<TrackedOrder | null> => {
-    if (!search.t) return null;
+  loaderDeps: ({ search }) => ({ token: search.t }),
+  loader: async ({ deps }): Promise<TrackedOrder | null> => {
+    if (!deps.token) return null;
     try {
-      return await trackOrder({ data: { token: search.t } });
+      return await trackOrder({ data: { token: deps.token } });
     } catch {
       return null;
     }
