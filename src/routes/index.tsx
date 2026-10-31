@@ -114,9 +114,9 @@ function Index() {
       const uploadToken = crypto.randomUUID();
       const paths: string[] = [];
       // Files upload straight from the browser to private storage; they never pass through our server.
-      for (let i = 0; i < files.length; i++) {
-        const path = `${uploadToken}/${i + 1}-${sanitizeFileName(files[i].file.name)}`;
-        const { error } = await supabase.storage.from("order-uploads").upload(path, files[i].file);
+      for (const [index, entry] of files.entries()) {
+        const path = `${uploadToken}/${index + 1}-${sanitizeFileName(entry.file.name)}`;
+        const { error } = await supabase.storage.from("order-uploads").upload(path, entry.file);
         if (error) throw new Error(t.orderSubmitError);
         paths.push(path);
       }

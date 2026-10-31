@@ -6,13 +6,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   orderUpdateSchema,
   paymentSettingsSchema,
-  requireAdminAccess,
   submitOrderSchema,
   trackOrderSchema,
   type OrderSummary,
   type PaymentSettings,
   type TrackedOrder,
 } from "./orders";
+import { requireAdminAccess } from "./pricing";
 
 // Public publishable client: only reads data exposed through narrow security-definer RPCs.
 function publicClient() {
@@ -120,8 +120,8 @@ export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requ
     utr: o.utr,
     filePaths: Array.isArray(o.file_paths) ? (o.file_paths as string[]) : [],
     screenshotPath: o.screenshot_path,
-    paymentStatus: o.payment_status,
-    orderStatus: o.order_status,
+    paymentStatus: o["payment_status"],
+    orderStatus: o["order_status"],
     createdAt: o.created_at,
   }));
 });
@@ -130,7 +130,7 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
   .inputValidator((input) => orderUpdateSchema.parse(input))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
-    const patch: Record<string, string> = {};
+    const patch: Database["public"]["Tables"]["orders"]["Update"] = {};
     if (data.paymentStatus) patch.payment_status = data.paymentStatus;
     if (data.orderStatus) patch.order_status = data.orderStatus;
     if (Object.keys(patch).length === 0) throw new Error("Nothing to update");
