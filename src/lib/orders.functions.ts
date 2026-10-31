@@ -47,7 +47,9 @@ export const getPaymentSettings = createServerFn({ method: "GET" }).handler(asyn
 export const submitOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => submitOrderSchema.parse(input))
   .handler(async ({ data }) => {
-    if (data.filePaths.some((p) => !p.startsWith("order-uploads/")) || (data.screenshotPath && !data.screenshotPath.startsWith("order-uploads/"))) {
+    // Storage paths are relative to the private "order-uploads" bucket.
+    const badPath = (p: string) => p.startsWith("/") || p.includes("..") || p.length > 300;
+    if (data.filePaths.some(badPath) || (data.screenshotPath && badPath(data.screenshotPath))) {
       throw new Error("Invalid upload reference. Please try again.");
     }
     const { data: rows, error: quoteError } = await publicClient().rpc("quote_print", {
@@ -144,7 +146,7 @@ export const getOrderFileUrls = createServerFn({ method: "POST" }).middleware([r
   .inputValidator((input) => z.object({ paths: z.array(z.string().min(1).max(300)).min(1).max(500) }).parse(input))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
-    if (data.paths.some((p) => !p.startsWith("order-uploads/"))) throw new Error("Invalid file reference");
+    if (data.paths.some((p) => p.startsWith("/") || p.includes(".."))) throw new Error("Invalid file reference");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: signed, error } = await supabaseAdmin.storage.from("order-uploads").createSignedUrls(data.paths, 600);
     if (error || !signed) throw new Error("Could not open the files. Please try again.");
