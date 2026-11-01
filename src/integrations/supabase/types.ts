@@ -34,7 +34,7 @@ export type Database = {
           total_sides: number
           tracking_token: string
           updated_at: string
-          utr: string
+          utr: string | null
         }
         Insert: {
           color_mode: string
@@ -55,7 +55,7 @@ export type Database = {
           total_sides: number
           tracking_token?: string
           updated_at?: string
-          utr: string
+          utr?: string | null
         }
         Update: {
           color_mode?: string
@@ -76,7 +76,7 @@ export type Database = {
           total_sides?: number
           tracking_token?: string
           updated_at?: string
-          utr?: string
+          utr?: string | null
         }
         Relationships: []
       }
