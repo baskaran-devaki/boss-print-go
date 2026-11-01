@@ -80,7 +80,7 @@ export const submitOrder = createServerFn({ method: "POST" })
       })
       .select("order_code, tracking_token")
       .single();
-    if (error || !order) throw new Error("Could not submit the order. Please try again.");
+    if (error || !order) { console.error("submitOrder insert failed", error); throw new Error("Could not submit the order. Please try again."); }
     return { orderCode: order.order_code, trackingToken: order.tracking_token, totalAmount };
   });
 
