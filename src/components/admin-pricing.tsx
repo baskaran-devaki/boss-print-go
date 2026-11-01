@@ -8,7 +8,7 @@ import { deletePricing, getAdminPricing, savePricing } from "@/lib/pricing.funct
 import { pricingSchema, type Pricing, type PricingInput } from "@/lib/pricing";
 import { useLang } from "@/lib/i18n";
 
-const blank: PricingInput = { service: "xerox", paper_size: "A4", color_mode: "bw", standard_rate: 1, bulk_rate: 0.75, bulk_threshold: 50, available: true };
+const blank: PricingInput = { service: "printout", paper_size: "A4", color_mode: "bw", standard_rate: 3, bulk_rate: 2, bulk_threshold: 50, available: true };
 export function AdminPricing() {
   const { t } = useLang();
   const client = useQueryClient();
@@ -52,7 +52,7 @@ export function AdminPricing() {
     {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
     {editing && <form className="space-y-4 border-y border-border py-4" onSubmit={(event) => { event.preventDefault(); void saveForm(); }}>
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="space-y-1 text-sm"><span>{t.service}</span><select className="input-pg" value={editing.pricing.service} onChange={(e) => field("service", e.target.value === "xerox" ? "xerox" : "printout")}><option value="xerox">XEROX</option><option value="printout">PRINTOUT</option></select></label>
+        <div className="space-y-1 text-sm"><span>{t.service}</span><p className="input-pg bg-muted font-medium">PRINTOUT</p></div>
         <label className="space-y-1 text-sm"><span>{t.size}</span><select className="input-pg" value={editing.pricing.paper_size} onChange={(e) => field("paper_size", e.target.value === "A4" ? "A4" : "A3")}><option>A4</option><option>A3</option></select></label>
         <label className="space-y-1 text-sm"><span>{t.color}</span><select className="input-pg" value={editing.pricing.color_mode} onChange={(e) => field("color_mode", e.target.value === "bw" ? "bw" : "color")}><option value="bw">{t.bw}</option><option value="color">{t.colorful}</option></select></label>
         {([ ["standard_rate", t.standardRate], ["bulk_rate", t.bulkRate], ["bulk_threshold", t.bulkThreshold] ] as const).map(([key, label]) => <label key={key} className="space-y-1 text-sm"><span>{label}</span><input className="input-pg" type="number" required min={key === "bulk_threshold" ? 1 : 0.01} max={key === "bulk_threshold" ? 1000000 : 100000} step={key === "bulk_threshold" ? 1 : 0.01} value={Number.isNaN(editing.pricing[key]) ? "" : editing.pricing[key]} onChange={(e) => field(key, e.target.valueAsNumber)} /></label>)}
