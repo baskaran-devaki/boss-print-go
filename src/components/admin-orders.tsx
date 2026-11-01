@@ -78,7 +78,7 @@ export function AdminOrders() {
                   <td className="pr-3">{o.customerName}<p className="text-xs text-muted-foreground">{o.mobile ?? "—"}</p></td>
                   <td className="pr-3">{o.service.toUpperCase()}<p className="text-xs text-muted-foreground">{o.paperSize} · {o.colorMode === "bw" ? t.bw : t.colorful} · {o.pages}×{o.copies} = {o.totalSides}</p></td>
                   <td className="pr-3 font-semibold">₹{o.totalAmount.toFixed(2)}</td>
-                  <td className="pr-3 break-all">{o.utr}</td>
+                  <td className="pr-3 break-all">{o.utr ?? "—"}</td>
                   <td className="pr-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.cls}`}>{badge.label}</span>
                     <div className="mt-1 flex gap-1">
