@@ -18,11 +18,11 @@ export const submitOrderSchema = z.object({
   colorMode: z.enum(["bw", "color"]),
   pages: z.number().int().min(1).max(100000),
   copies: z.number().int().min(1).max(10000),
-  utr: z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/),
+  utr: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/).optional()),
   filePaths: z.array(z.string().min(1).max(300)).min(1).max(500),
   screenshotPath: z.string().min(1).max(300).optional(),
   expectedTotal: z.number().multipleOf(0.01).min(0).max(10000000),
-});
+}).refine((o) => !!o.utr || !!o.screenshotPath, { message: "Enter the UTR number or upload a payment screenshot.", path: ["utr"] });
 
 export const trackOrderSchema = z.object({ token: z.string().regex(/^[a-f0-9]{48}$/) });
 
@@ -57,7 +57,7 @@ export type OrderSummary = {
   copies: number;
   totalSides: number;
   totalAmount: number;
-  utr: string;
+  utr: string | null;
   filePaths: string[];
   screenshotPath: string | null;
   paymentStatus: PaymentStatus;

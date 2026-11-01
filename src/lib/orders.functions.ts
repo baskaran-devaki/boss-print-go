@@ -74,7 +74,7 @@ export const submitOrder = createServerFn({ method: "POST" })
         copies: data.copies,
         total_sides: totalSides,
         total_amount: totalAmount,
-        utr: data.utr,
+        utr: data.utr ?? null,
         file_paths: data.filePaths,
         screenshot_path: data.screenshotPath ?? null,
       })

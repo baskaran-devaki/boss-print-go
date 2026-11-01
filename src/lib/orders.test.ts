@@ -19,8 +19,9 @@ describe("order submission rules", () => {
     expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", mobile: "12345" }).success).toBe(false);
   });
 
-  it("requires a UTR and rejects malformed ones", () => {
+  it("needs either a UTR or a screenshot", () => {
     expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", utr: "" }).success).toBe(false);
+    expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", utr: "", screenshotPath: "t/screenshot-a.png" }).success).toBe(true);
     expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", utr: "UTR 12<script>" }).success).toBe(false);
     expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", utr: "TNPB12345678" }).success).toBe(true);
   });

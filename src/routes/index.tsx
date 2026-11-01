@@ -107,7 +107,7 @@ function Index() {
   }
 
   async function submit() {
-    if (!pricing || total === undefined || pages < 1 || files.length === 0 || !name.trim() || !utr.trim() || submitting) return;
+    if (!pricing || total === undefined || pages < 1 || files.length === 0 || !name.trim() || (!utr.trim() && !screenshot) || submitting) return;
     setSubmitting(true); setSubmitError("");
     try {
       setStage("uploading");
@@ -130,7 +130,7 @@ function Index() {
       // The server re-quotes pricing and refuses the order if the total the customer paid differs.
       const placed = await submitOrderFn({ data: {
         customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color,
-        pages, copies, utr: utr.trim(), filePaths: paths, screenshotPath, expectedTotal: total,
+        pages, copies, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
       } });
       setOrder(placed);
     } catch (err) {
@@ -274,7 +274,7 @@ function Index() {
               )}
               {settings.qrImage && <img src={settings.qrImage} alt={t.currentQr} className="mx-auto mb-4 h-40 w-40 rounded-xl border border-border object-contain" />}
               {!settings.upiId && <p role="alert" className="mb-3 text-sm text-destructive">{t.unavailable}</p>}
-              <input required value={utr} onChange={(e) => setUtr(e.target.value)} placeholder={t.utrPlaceholder} aria-label={t.utr} maxLength={40} className="input-pg" />
+              <input value={utr} onChange={(e) => setUtr(e.target.value)} placeholder={t.utrPlaceholder} aria-label={t.utr} maxLength={40} className="input-pg" />
               <label className="mt-2 flex cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-muted-foreground">
                 <Upload className="h-4 w-4 text-primary" />
                 <span className="min-w-0 truncate">{screenshot ? screenshot.name : t.screenshotOptional}</span>
@@ -282,7 +282,7 @@ function Index() {
               </label>
               {screenshotError && <p role="alert" className="mt-2 text-sm text-destructive">{screenshotError}</p>}
               <Button
-                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim() || !utr.trim()}
+                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim() || (!utr.trim() && !screenshot)}
                 onClick={() => void submit()}
                 className="btn-primary-pg mt-3 w-full"
               >
