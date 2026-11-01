@@ -3,7 +3,7 @@ import { buildUpiUri } from "./upi-qr";
 import { paymentSettingsSchema, sanitizeFileName, submitOrderSchema } from "./orders";
 
 const base = {
-  service: "xerox", paperSize: "A4", colorMode: "bw", pages: 3, copies: 2,
+  service: "printout", paperSize: "A4", colorMode: "bw", pages: 3, copies: 2,
   utr: "123456789012", filePaths: ["order-uploads/t/1-a.pdf"], expectedTotal: 6,
 };
 
@@ -28,6 +28,11 @@ describe("order submission rules", () => {
   it("rejects file references outside the private order bucket", () => {
     const parsed = submitOrderSchema.safeParse({ ...base, customerName: "Priya", filePaths: ["public/steal.pdf"] });
     expect(parsed.success).toBe(true); // schema accepts the shape; the server rejects the prefix
+  });
+
+  it("accepts only the PRINTOUT service", () => {
+    expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya" }).success).toBe(true);
+    expect(submitOrderSchema.safeParse({ ...base, customerName: "Priya", service: "xerox" }).success).toBe(false);
   });
 });
 
