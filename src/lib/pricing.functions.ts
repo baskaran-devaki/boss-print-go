@@ -54,7 +54,7 @@ export const checkAdmin = createServerFn({ method: "POST" }).middleware([require
 export const getAdminPricing = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
   requireAdminAccess(allowed);
-  const { data, error } = await context.supabase.from("service_pricing").select("*").order("service").order("paper_size");
+  const { data, error } = await context.supabase.from("service_pricing").select("*").eq("service", "printout").order("paper_size").order("color_mode");
   if (error) throw new Error("Could not load pricing");
   return data ?? [];
 });

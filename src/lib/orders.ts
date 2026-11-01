@@ -13,7 +13,7 @@ const optionalDigits = z.preprocess(
 export const submitOrderSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   mobile: optionalDigits,
-  service: z.enum(["xerox", "printout"]),
+  service: z.enum(["printout"]),
   paperSize: z.enum(["A4", "A3"]),
   colorMode: z.enum(["bw", "color"]),
   pages: z.number().int().min(1).max(100000),

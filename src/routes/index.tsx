@@ -60,7 +60,7 @@ function Index() {
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
   const settingsQuery = useSuspenseQuery(paymentSettingsOptions);
   const submitOrderFn = useServerFn(submitOrder);
-  const [service, setService] = useState<"xerox" | "printout">("xerox");
+  const service = "printout" as const;
   const [files, setFiles] = useState<PrintFile[]>([]);
   const [pending, setPending] = useState(0);
   const [errors, setErrors] = useState<{ name: string; code: UploadErrorCode }[]>([]);
@@ -88,7 +88,7 @@ function Index() {
   const step = order ? 1 : 0;
   const trackingUrl = order ? `${window.location.origin}/track?t=${order.trackingToken}` : "";
   const qr = useQrDataUrl(settings.upiId && total !== undefined ? buildUpiUri(settings.upiId, settings.payeeName, total) : "");
-  useEffect(() => { setOrder(null); setSubmitError(""); }, [service, size, color, sides, pages, copies, per]);
+  useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per]);
 
   async function copyText(text: string, key: "upi" | "gpay" | "link") {
     try {
@@ -197,8 +197,6 @@ function Index() {
 
         <Card icon={Printer} title={t.settings} delay={60}>
           <div className="space-y-3 text-sm">
-            <p className="text-muted-foreground">{t.service}</p>
-            <Seg value={service} onChange={setService} options={[["xerox", "XEROX"], ["printout", "PRINTOUT"]]} />
             <p className="text-muted-foreground">{t.color}</p>
             <Seg value={color} onChange={setColor} options={[["bw", t.bw], ["color", t.colorful]]} />
             <p className="text-muted-foreground">{t.sides}</p>
