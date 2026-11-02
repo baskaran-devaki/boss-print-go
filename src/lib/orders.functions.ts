@@ -47,6 +47,9 @@ export const getPaymentSettings = createServerFn({ method: "GET" }).handler(asyn
 export const submitOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => submitOrderSchema.parse(input))
   .handler(async ({ data }) => {
+    const { findCustomer } = await import("./customers.server");
+    const customer = await findCustomer();
+    if (!customer) throw new Error("Please enter your customer details before ordering.");
     // Storage paths are relative to the private "order-uploads" bucket.
     const badPath = (p: string) => p.startsWith("/") || p.includes("..") || p.length > 300;
     if (data.filePaths.some(badPath) || (data.screenshotPath && badPath(data.screenshotPath))) {
@@ -65,8 +68,9 @@ export const submitOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .insert({
-        customer_name: data.customerName,
-        mobile: data.mobile ?? null,
+        customer_id: customer.id,
+        customer_name: customer.name,
+        mobile: customer.mobile,
         service: data.service,
         paper_size: data.paperSize,
         color_mode: data.colorMode,
