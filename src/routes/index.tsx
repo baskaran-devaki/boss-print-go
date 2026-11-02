@@ -3,13 +3,15 @@ import { useEffect, useState } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getCustomerPricing, validateFinalPrice } from "@/lib/pricing.functions";
+import { getCustomerPricing } from "@/lib/pricing.functions";
 import { getPaymentSettings, submitOrder } from "@/lib/orders.functions";
+import { CustomerShell, customerOptions, useCustomer } from "@/components/customer-shell";
+import { useQueryClient } from "@tanstack/react-query";
 import { calculatePrice } from "@/lib/pricing";
 import { buildUpiUri, useQrDataUrl } from "@/lib/upi-qr";
 import { sanitizeFileName } from "@/lib/orders";
-import { Upload, Printer, User, Receipt, CreditCard, PackageCheck, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
-import { useLang, LangToggle } from "@/lib/i18n";
+import { Upload, Printer, User, Receipt, CreditCard, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { detectPages, printedSides, UploadError, type PrintFile, type UploadErrorCode } from "@/lib/print-files";
 
@@ -18,6 +20,7 @@ const paymentSettingsOptions = queryOptions({ queryKey: ["payment-settings"], qu
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
     Promise.all([
+      context.queryClient.ensureQueryData(customerOptions),
       context.queryClient.ensureQueryData(customerPricingOptions),
       context.queryClient.ensureQueryData(paymentSettingsOptions),
     ]),
@@ -36,7 +39,7 @@ export const Route = createFileRoute("/")({
 
 function Card({ icon: Icon, title, children, delay = 0 }: { icon: typeof Upload; title: string; children: React.ReactNode; delay?: number }) {
   return (
-    <section className="card-pg animate-rise" style={{ animationDelay: `${delay}ms` }}>
+    <section className="customer-section animate-rise" style={{ animationDelay: `${delay}ms` }}>
       <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-primary"><Icon className="h-5 w-5" /></span>{title}
       </h2>
@@ -56,7 +59,14 @@ function Seg<T extends string>({ value, options, onChange }: { value: T; options
 }
 
 function Index() {
+  const customer = useCustomer();
+  return <CustomerShell page="dashboard">{customer && <PrintDashboard key={customer.id} />}</CustomerShell>;
+}
+
+function PrintDashboard() {
   const { t } = useLang();
+  const customer = useCustomer();
+  const client = useQueryClient();
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
   const settingsQuery = useSuspenseQuery(paymentSettingsOptions);
   const submitOrderFn = useServerFn(submitOrder);
@@ -68,8 +78,8 @@ function Index() {
   const [sides, setSides] = useState<"single" | "double">("single");
   const [size, setSize] = useState<"A4" | "A3">("A4");
   const [copies, setCopies] = useState(1);
-  const [name, setName] = useState("");
-  const [mobile, setMobile] = useState("");
+  const name = customer?.name ?? "";
+  const mobile = customer?.mobile ?? "";
   const [utr, setUtr] = useState("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [screenshotError, setScreenshotError] = useState("");
@@ -85,7 +95,6 @@ function Index() {
   const per = calculation?.rate;
   const total = calculation?.amount;
   const settings = settingsQuery.data;
-  const step = order ? 1 : 0;
   const trackingUrl = order ? `${window.location.origin}/track?t=${order.trackingToken}` : "";
   const qr = useQrDataUrl(settings.upiId && total !== undefined ? buildUpiUri(settings.upiId, settings.payeeName, total) : "");
   useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per]);
@@ -133,6 +142,7 @@ function Index() {
         pages, copies, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
       } });
       setOrder(placed);
+      void client.invalidateQueries({ queryKey: ["customer-orders"] });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t.orderSubmitError);
       await pricingQuery.refetch();
@@ -162,18 +172,8 @@ function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16">
-      <header className="hero-pg px-5 pb-16 pt-6 text-primary-foreground">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-foreground/15"><Printer className="h-5 w-5" /></span>
-            <div><p className="font-display text-xl font-bold leading-none">BOSS PrintGo</p><p className="text-xs opacity-80">{t.tagline}</p></div>
-          </div>
-          <LangToggle />
-        </div>
-      </header>
-
-      <main aria-busy={submitting} className={`mx-auto -mt-10 grid max-w-3xl gap-4 px-4 md:grid-cols-2 ${submitting ? "pointer-events-none" : ""}`} inert={submitting}>
+    <>
+      <main aria-busy={submitting} className={`mx-auto grid max-w-5xl gap-5 px-4 md:grid-cols-2 ${submitting ? "pointer-events-none" : ""}`} inert={submitting}>
         <Card icon={Upload} title={t.upload}>
           <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-accent/50 p-6 text-center text-sm text-muted-foreground transition hover:border-primary">
             <Upload className="h-8 w-8 text-primary" />{t.drop}
@@ -216,8 +216,8 @@ function Index() {
 
         <Card icon={User} title={t.details} delay={120}>
           <div className="space-y-3">
-            <input required value={name} onChange={(e) => setName(e.target.value)} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={100} className="input-pg" />
-            <input value={mobile} onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ""))} placeholder={t.mobileOptional} aria-label={t.mobileOptional} inputMode="numeric" autoComplete="tel" maxLength={10} className="input-pg" />
+            <input required value={name} readOnly placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={100} className="input-pg" />
+            <input value={mobile} readOnly placeholder={t.mobileOptional} aria-label={t.mobileOptional} inputMode="numeric" autoComplete="tel" maxLength={10} className="input-pg" />
           </div>
         </Card>
 
@@ -293,37 +293,8 @@ function Index() {
           )}
         </Card>
 
-        <Card icon={PackageCheck} title={t.track} delay={300}>
-          {order ? (
-            <>
-              <p className="mb-3 text-xs text-muted-foreground">#{order.orderCode}</p>
-              <ol className="space-y-3">
-                {t.status.map((s, i) => (
-                  <li key={s} className="flex items-center gap-3 text-sm">
-                    <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
-                    <span className={i <= step ? "font-medium" : "text-muted-foreground"}>{s}</span>
-                  </li>
-                ))}
-              </ol>
-              <p className="mt-3 flex items-center justify-between gap-2 text-sm"><span className="text-muted-foreground">{t.paymentCol}</span><span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">{t.paymentPending}</span></p>
-              <Link to="/track" search={{ t: order.trackingToken }} className="mt-3 inline-block text-sm text-primary underline">{t.trackingLink}</Link>
-            </>
-          ) : (
-            <>
-              <p className="mb-3 text-xs text-muted-foreground">#BPG-2041</p>
-              <ol className="space-y-3">
-                {t.status.map((s, i) => (
-                  <li key={s} className="flex items-center gap-3 text-sm">
-                    <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{i + 1}</span>
-                    <span className={i <= step ? "font-medium" : "text-muted-foreground"}>{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
-        </Card>
       </main>
       <p className="mt-8 text-center text-xs text-muted-foreground"><Link to="/admin" className="underline">{t.admin}</Link></p>
-    </div>
+    </>
   );
 }

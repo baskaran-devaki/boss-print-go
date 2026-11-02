@@ -157,3 +157,11 @@ body { font-family: var(--font-sans); }
 .btn-soft { height: 2rem; width: 2rem; border-radius: 0.6rem; background: var(--accent); color: var(--primary); font-weight: 700; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .animate-rise { animation: rise .5s ease-out both; }
+.customer-section { min-width: 0; padding: 1.25rem 0; border-top: 1px solid var(--border); }
+.customer-section h2 { margin-bottom: 1rem; }
+.customer-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.customer-entry .input-pg { min-height: 3rem; background: var(--card); }
+.customer-app .input-pg { min-height: 2.875rem; }
+.customer-app input[readonly] { color: var(--muted-foreground); }
+@media (min-width: 768px) { .customer-section { padding: 1.25rem; } }
+@media (prefers-reduced-motion: reduce) { .animate-rise { animation: none; } }
