@@ -13,5 +13,8 @@
 - [x] Admin order verification (payment stays pending until verified) and status updates.
 - [x] Test pricing boundaries, access controls, and customer flow.
 
-# Blocked
-- [ ] Assign and verify an admin account (blocked: no auth users exist; owner must create and identify an account). Until then the admin order screens and payment settings cannot be tried signed in.
+# Customer mobile experience
+- [ ] Add private name/mobile/category entry and admin customer counts.
+- [ ] Autofill order details and link orders to the customer session.
+- [ ] Add Dashboard, Status and current-calendar-month History with India-time reset.
+- [ ] Verify customer and admin flows on mobile and desktop.
