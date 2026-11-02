@@ -10,8 +10,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { calculatePrice } from "@/lib/pricing";
 import { buildUpiUri, useQrDataUrl } from "@/lib/upi-qr";
 import { sanitizeFileName } from "@/lib/orders";
-import { Upload, Printer, User, Receipt, CreditCard, PackageCheck, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
-import { useLang, LangToggle } from "@/lib/i18n";
+import { Upload, Printer, User, Receipt, CreditCard, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { detectPages, printedSides, UploadError, type PrintFile, type UploadErrorCode } from "@/lib/print-files";
 
@@ -54,11 +54,16 @@ function Seg<T extends string>({ value, options, onChange }: { value: T; options
       {options.map(([v, l]) => (
         <Button variant="ghost" aria-pressed={value === v} key={v} onClick={() => onChange(v)} className={`rounded-lg py-2 text-sm font-medium transition-all ${value === v ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}>{l}</Button>
       ))}
-    </CustomerShell>
+    </div>
   );
 }
 
 function Index() {
+  const customer = useCustomer();
+  return <CustomerShell page="dashboard">{customer && <PrintDashboard key={customer.id} />}</CustomerShell>;
+}
+
+function PrintDashboard() {
   const { t } = useLang();
   const customer = useCustomer();
   const client = useQueryClient();
@@ -167,7 +172,7 @@ function Index() {
   }
 
   return (
-    <CustomerShell page="dashboard">
+    <>
       <main aria-busy={submitting} className={`mx-auto grid max-w-5xl gap-5 px-4 md:grid-cols-2 ${submitting ? "pointer-events-none" : ""}`} inert={submitting}>
         <Card icon={Upload} title={t.upload}>
           <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-accent/50 p-6 text-center text-sm text-muted-foreground transition hover:border-primary">
@@ -290,6 +295,6 @@ function Index() {
 
       </main>
       <p className="mt-8 text-center text-xs text-muted-foreground"><Link to="/admin" className="underline">{t.admin}</Link></p>
-    </CustomerShell>
+    </>
   );
 }
