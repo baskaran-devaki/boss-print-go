@@ -29,6 +29,13 @@
       "when": 1793550518604,
       "tag": "0003_uploads_any_user_utr_optional",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793595371928,
+      "tag": "0004_customer_guest_sessions",
+      "breakpoints": true
     }
   ]
 }

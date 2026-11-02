@@ -14,11 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          last_login_at: string
+          login_count: number
+          mobile: string | null
+          name: string
+          session_hash: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          last_login_at?: string
+          login_count?: number
+          mobile?: string | null
+          name: string
+          session_hash: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          last_login_at?: string
+          login_count?: number
+          mobile?: string | null
+          name?: string
+          session_hash?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           color_mode: string
           copies: number
           created_at: string
+          customer_id: string | null
           customer_name: string
           file_paths: Json
           id: string
@@ -40,6 +74,7 @@ export type Database = {
           color_mode: string
           copies: number
           created_at?: string
+          customer_id?: string | null
           customer_name: string
           file_paths?: Json
           id?: string
@@ -61,6 +96,7 @@ export type Database = {
           color_mode?: string
           copies?: number
           created_at?: string
+          customer_id?: string | null
           customer_name?: string
           file_paths?: Json
           id?: string
@@ -78,7 +114,15 @@ export type Database = {
           updated_at?: string
           utr?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_settings: {
         Row: {
