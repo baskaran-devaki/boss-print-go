@@ -14,7 +14,7 @@
 - [x] Test pricing boundaries, access controls, and customer flow.
 
 # Customer mobile experience
-- [ ] Add private name/mobile/category entry and admin customer counts.
-- [ ] Autofill order details and link orders to the customer session.
-- [ ] Add Dashboard, Status and current-calendar-month History with India-time reset.
-- [ ] Verify customer and admin flows on mobile and desktop.
+- [x] Add private name/mobile/category entry and admin customer counts.
+- [x] Autofill order details and link orders to the customer session.
+- [x] Add Dashboard, Status and current-calendar-month History with India-time reset.
+- [x] Verify customer and admin flows on mobile and desktop.
