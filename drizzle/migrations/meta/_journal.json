@@ -36,6 +36,13 @@
       "when": 1793595371928,
       "tag": "0004_customer_guest_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793678179953,
+      "tag": "0005_customer_monthly_login_expiry",
+      "breakpoints": true
     }
   ]
 }
