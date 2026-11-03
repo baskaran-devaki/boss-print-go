@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 export function AdminCustomers() {
   const { t } = useLang();
   const fetch = useServerFn(getAdminCustomers);
-  const query = useQuery({ queryKey: ["admin-customers"], queryFn: () => fetch() });
+  const query = useQuery({ queryKey: ["admin-customers"], queryFn: () => fetch(), refetchInterval: 15_000 });
   const categories: Record<string, string> = { school_student: t.schoolStudent, college_student: t.collegeStudent, others: t.others };
   return <div className="space-y-5"><div className="flex items-center justify-between"><div><p className="text-sm text-muted-foreground">{t.customerCount}</p><p className="flex items-center gap-3 font-display text-3xl font-bold"><Users className="text-primary" />{query.data?.count ?? "—"}</p></div><Button variant="outline" size="icon" aria-label={t.refresh} onClick={() => void query.refetch()}><RefreshCw className="h-4 w-4" /></Button></div>
     {query.isPending && <p role="status">{t.loadingCustomers}</p>}{query.error && <p role="alert" className="text-destructive">{query.error.message}</p>}

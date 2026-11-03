@@ -7,8 +7,15 @@ export const customerEntrySchema = z.object({
   category: z.enum(CUSTOMER_CATEGORIES),
 });
 export type CustomerEntry = z.infer<typeof customerEntrySchema>;
-export type Customer = CustomerEntry & { id: string };
+export type Customer = CustomerEntry & { id: string; sessionExpiresAt: string };
 export function indiaMonthStart(now = new Date()) {
   const india = new Date(now.getTime() + 330 * 60 * 1000);
   return new Date(Date.UTC(india.getUTCFullYear(), india.getUTCMonth(), 1) - 330 * 60 * 1000).toISOString();
+}
+export function indiaNextMonthStart(now = new Date()) {
+  const india = new Date(now.getTime() + 330 * 60 * 1000);
+  return new Date(Date.UTC(india.getUTCFullYear(), india.getUTCMonth() + 1, 1) - 330 * 60 * 1000).toISOString();
+}
+export function isCustomerSessionActive(expiresAt: string | null, now = new Date()) {
+  return expiresAt !== null && new Date(expiresAt).getTime() > now.getTime();
 }

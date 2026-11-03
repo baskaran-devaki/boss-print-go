@@ -39,7 +39,7 @@ function Admin() {
   const admin = useQuery({ queryKey: ["admin-access", user?.id], queryFn: () => verifyAdmin(), enabled: !!user });
   const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: () => fetchOrders(), enabled: !!user && !!admin.data });
   const fetchCustomers = useServerFn(getAdminCustomers);
-  const customersQuery = useQuery({ queryKey: ["admin-customers"], queryFn: () => fetchCustomers(), enabled: !!user && !!admin.data });
+  const customersQuery = useQuery({ queryKey: ["admin-customers"], queryFn: () => fetchCustomers(), enabled: !!user && !!admin.data, refetchInterval: 15_000 });
   const ordersList = ordersQuery.data ?? [];
   const orderStats = {
     count: ordersList.length,

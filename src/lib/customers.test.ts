@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { customerEntrySchema, indiaMonthStart } from "./customers";
+import { customerEntrySchema, indiaMonthStart, indiaNextMonthStart, isCustomerSessionActive } from "./customers";
 describe("customer entry", () => {
   it("requires a name", () => { expect(customerEntrySchema.safeParse({ name: " ", mobile: "", category: "others" }).success).toBe(false); });
   it("allows optional mobile and validates supplied numbers", () => {
@@ -13,5 +13,17 @@ describe("customer entry", () => {
   it("resets history on the first at midnight India time", () => {
     expect(indiaMonthStart(new Date("2026-11-30T18:29:59Z"))).toBe("2026-10-31T18:30:00.000Z");
     expect(indiaMonthStart(new Date("2026-11-30T18:30:00Z"))).toBe("2026-11-30T18:30:00.000Z");
+  });
+  it("keeps a November login until December 1 midnight India time", () => {
+    expect(indiaNextMonthStart(new Date("2026-11-03T03:55:00Z"))).toBe("2026-11-30T18:30:00.000Z");
+    expect(indiaNextMonthStart(new Date("2026-12-31T18:30:00Z"))).toBe("2027-01-31T18:30:00.000Z");
+  });
+  it("automatically logs out at the first midnight, not one second before", () => {
+    const expires = "2026-11-30T18:30:00.000Z";
+    expect(isCustomerSessionActive(expires, new Date("2026-11-30T18:29:59Z"))).toBe(true);
+    expect(isCustomerSessionActive(expires, new Date(expires))).toBe(false);
+  });
+  it("excludes explicitly logged-out customers from active sessions", () => {
+    expect(isCustomerSessionActive(null, new Date("2026-11-03T03:55:00Z"))).toBe(false);
   });
 });

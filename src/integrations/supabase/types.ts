@@ -23,6 +23,7 @@ export type Database = {
           login_count: number
           mobile: string | null
           name: string
+          session_expires_at: string | null
           session_hash: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           login_count?: number
           mobile?: string | null
           name: string
+          session_expires_at?: string | null
           session_hash: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           login_count?: number
           mobile?: string | null
           name?: string
+          session_expires_at?: string | null
           session_hash?: string
         }
         Relationships: []

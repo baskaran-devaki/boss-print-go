@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Printer, LayoutDashboard, PackageCheck, History, ArrowRight, UserRound, LogOut } from "lucide-react";
 import { getCustomer, enterCustomer, leaveCustomer } from "@/lib/customers.functions";
 import { CUSTOMER_CATEGORIES, type CustomerEntry } from "@/lib/customers";
@@ -20,6 +20,27 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [category, setCategory] = useState<CustomerEntry["category"] | "">("");
+  useEffect(() => {
+    if (!customer) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const checkExpiry = () => {
+      const remaining = new Date(customer.sessionExpiresAt).getTime() - Date.now();
+      if (remaining <= 0) {
+        client.setQueryData(customerOptions.queryKey, null);
+        client.removeQueries({ queryKey: ["customer-orders"] });
+        return;
+      }
+      timer = setTimeout(checkExpiry, Math.min(remaining, 60_000));
+    };
+    const checkOnFocus = () => {
+      clearTimeout(timer);
+      checkExpiry();
+      void client.invalidateQueries({ queryKey: customerOptions.queryKey });
+    };
+    checkExpiry();
+    window.addEventListener("focus", checkOnFocus);
+    return () => { clearTimeout(timer); window.removeEventListener("focus", checkOnFocus); };
+  }, [customer, client]);
   async function signIn(form: HTMLFormElement) {
     setBusy(true); setError("");
     const values = new FormData(form);
