@@ -18,3 +18,8 @@
 - [x] Autofill order details and link orders to the customer session.
 - [x] Add Dashboard, Status and current-calendar-month History with India-time reset.
 - [x] Verify customer and admin flows on mobile and desktop.
+
+# Monthly customer login
+- [ ] Persist session expiry and revoke active status on logout.
+- [ ] Show only logged-in customers and counts in admin.
+- [ ] Enforce India-midnight month-end logout in open pages and on server reads; test boundaries and flows.
