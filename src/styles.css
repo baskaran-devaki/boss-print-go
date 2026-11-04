@@ -256,3 +256,38 @@ body { font-family: var(--font-sans); }
   .customer-entry > main > a:last-child { margin-top: 8px; }
 }
 /* END BOSS login layout v2 */
+
+/* BOSS moving header tagline */
+.boss-tagline-marquee {
+  overflow: hidden;
+}
+.boss-tagline-track {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: content-box;
+  padding-left: 100%;
+  margin: 0;
+  white-space: nowrap;
+  animation: boss-tagline-slide 18s linear infinite;
+}
+@keyframes boss-tagline-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+.boss-tagline-marquee:hover .boss-tagline-track,
+.boss-tagline-marquee:active .boss-tagline-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-tagline-track {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding-left: 0;
+    white-space: normal;
+    text-align: center;
+    animation: none;
+  }
+}
+/* END BOSS moving header tagline */
