@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { trackOrder } from "@/lib/orders.functions";
 import { ORDER_STATUSES, type TrackedOrder } from "@/lib/orders";
 import { useLang } from "@/lib/i18n";
@@ -35,6 +36,13 @@ function TrackPage() {
   const { t } = useLang();
   const order = Route.useLoaderData();
   const token = Route.useSearch().t;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!token) return;
+    const id = setInterval(() => void router.invalidate(), 5000);
+    return () => clearInterval(id);
+  }, [router, token]);
 
   if (!token) {
     return (
