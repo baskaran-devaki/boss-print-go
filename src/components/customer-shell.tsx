@@ -61,8 +61,13 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
   const categories = { school_student: t.schoolStudent, college_student: t.collegeStudent, others: t.others };
   if (!customer) return <div className="customer-entry min-h-screen bg-background">
     <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5"><Link to="/" className="flex items-center gap-2 font-display font-bold text-primary"><Printer />BOSS PrintGo</Link><LangToggle /></header>
-    <main className="mx-auto max-w-md px-5 pb-10 pt-8 sm:pt-16">
-      <div className="mb-8 flex items-center gap-4"><span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-accent text-primary"><UserRound className="h-8 w-8" /></span><div><h1 className="font-display text-2xl font-bold">BOSS PrintGo</h1><p className="mt-1 text-sm text-muted-foreground">{t.tagline}</p></div></div>
+    <main className="mx-auto max-w-md px-5 pb-10 pt-10 sm:pt-16">
+      <div className="animate-rise mb-10 text-center">
+        <span className="hero-pg mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl text-primary-foreground shadow-[var(--shadow-card)]"><Printer className="h-10 w-10" /></span>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">BOSS PrintGo</h1>
+        <p className="mt-3 font-display text-lg font-semibold leading-snug text-accent-foreground sm:text-xl">{t.loginTagline}</p>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{t.loginDescription}</p>
+      </div>
       <h2 className="mb-6 font-display text-xl font-semibold">{t.customerLogin}</h2>
       <form onSubmit={(e) => { e.preventDefault(); void signIn(e.currentTarget); }} className="space-y-5">
         <label className="block space-y-2 text-sm font-medium"><span>{t.name} *</span><input name="name" required autoComplete="name" maxLength={100} className="input-pg" /></label>
