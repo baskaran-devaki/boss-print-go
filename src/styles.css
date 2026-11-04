@@ -165,3 +165,94 @@ body { font-family: var(--font-sans); }
 .customer-app input[readonly] { color: var(--muted-foreground); }
 @media (min-width: 768px) { .customer-section { padding: 1.25rem; } }
 @media (prefers-reduced-motion: reduce) { .animate-rise { animation: none; } }
+
+/* BOSS login layout v2 */
+.customer-entry {
+  box-sizing: border-box;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+.customer-entry > header {
+  width: 100%;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+.customer-entry > main {
+  box-sizing: border-box;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 20px 12px;
+}
+.customer-entry > main > div:first-child {
+  display: block;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.customer-entry > main > div:first-child > span {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+}
+.customer-entry > main > div:first-child > span svg {
+  width: 24px;
+  height: 24px;
+}
+.customer-entry h1 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+.customer-entry > main > div:first-child > p:first-of-type {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.customer-entry > main > div:first-child > p:last-of-type {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.customer-entry h2 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  line-height: 1.3;
+}
+.customer-entry form {
+  display: grid;
+  gap: 10px;
+}
+.customer-entry form > *,
+.customer-entry form label > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.customer-entry form label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.customer-entry .input-pg {
+  box-sizing: border-box;
+  min-height: 44px;
+  height: 44px;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+.customer-entry form button {
+  min-height: 44px;
+  height: 44px;
+}
+.customer-entry > main > a:last-child {
+  margin-top: 12px;
+}
+@media (max-height: 600px) {
+  .customer-entry > main { padding-block: 6px; }
+  .customer-entry > main > div:first-child { margin-bottom: 8px; }
+  .customer-entry > main > div:first-child > span { display: none; }
+  .customer-entry form { gap: 6px; }
+  .customer-entry > main > a:last-child { margin-top: 8px; }
+}
+/* END BOSS login layout v2 */
