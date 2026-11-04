@@ -6,7 +6,7 @@ import { getCustomerOrders } from "@/lib/customers.functions";
 import { useLang } from "@/lib/i18n";
 import { Button } from "./ui/button";
 
-export const customerOrdersOptions = queryOptions({ queryKey: ["customer-orders"], queryFn: () => getCustomerOrders(), staleTime: 0, refetchInterval: 60000, refetchOnWindowFocus: true });
+export const customerOrdersOptions = queryOptions({ queryKey: ["customer-orders"], queryFn: () => getCustomerOrders(), staleTime: 0, refetchInterval: 5000, refetchOnWindowFocus: true });
 export function CustomerOrders({ mode }: { mode: "history" | "status" }) {
   const query = useSuspenseQuery(customerOrdersOptions);
   const { t } = useLang();
