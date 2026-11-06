@@ -61,7 +61,13 @@ export const submitOrder = createServerFn({ method: "POST" })
     const quote = rows?.[0];
     if (quoteError || !quote) throw new Error("This print option is unavailable. Refresh pricing and try again.");
     const totalSides = Number(quote.total_sides);
-    const totalAmount = Number(quote.total_amount);
+    let bindingAmount = 0;
+    if (data.spiralBinding) {
+      const { data: perSet, error: bindError } = await publicClient().rpc("quote_binding", { _pages: data.pages });
+      if (bindError || perSet === null || perSet === undefined) throw new Error("Spiral binding is unavailable for this page count.");
+      bindingAmount = (Math.round(Number(perSet) * 100) * data.copies) / 100;
+    }
+    const totalAmount = (Math.round(Number(quote.total_amount) * 100) + Math.round(bindingAmount * 100)) / 100;
     if (!Number.isFinite(totalAmount) || totalSides < 1) throw new Error("Could not calculate the order total. Please try again.");
     if (data.expectedTotal !== totalAmount) throw new Error("Price changed. Review the updated total and try again.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -77,6 +83,8 @@ export const submitOrder = createServerFn({ method: "POST" })
         print_sides: data.printSides,
         pages: data.pages,
         copies: data.copies,
+        spiral_binding: data.spiralBinding,
+        binding_amount: bindingAmount,
         total_sides: totalSides,
         total_amount: totalAmount,
         utr: data.utr ?? null,
@@ -121,6 +129,8 @@ export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requ
     paperSize: o.paper_size,
     colorMode: o.color_mode,
     printSides: o.print_sides === "double" ? "double" : "single",
+    spiralBinding: o.spiral_binding,
+    bindingAmount: Number(o.binding_amount),
     pages: o.pages,
     copies: o.copies,
     totalSides: Number(o.total_sides),
