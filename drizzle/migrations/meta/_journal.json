@@ -50,6 +50,13 @@
       "when": 1793970508657,
       "tag": "0006_allow_legal_paper",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793971881012,
+      "tag": "0007_add_order_print_sides",
+      "breakpoints": true
     }
   ]
 }

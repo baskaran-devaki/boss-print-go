@@ -65,6 +65,7 @@ export type Database = {
           pages: number
           paper_size: string
           payment_status: Database["public"]["Enums"]["payment_status"]
+          print_sides: string
           screenshot_path: string | null
           service: string
           total_amount: number
@@ -87,6 +88,7 @@ export type Database = {
           pages: number
           paper_size: string
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          print_sides?: string
           screenshot_path?: string | null
           service: string
           total_amount: number
@@ -109,6 +111,7 @@ export type Database = {
           pages?: number
           paper_size?: string
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          print_sides?: string
           screenshot_path?: string | null
           service?: string
           total_amount?: number
