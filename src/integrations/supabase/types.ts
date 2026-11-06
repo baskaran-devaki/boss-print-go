@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      binding_prices: {
+        Row: {
+          created_at: string
+          id: string
+          max_pages: number
+          min_pages: number
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_pages: number
+          min_pages: number
+          price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_pages?: number
+          min_pages?: number
+          price?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           category: string
@@ -52,6 +76,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          binding_amount: number
           color_mode: string
           copies: number
           created_at: string
@@ -68,6 +93,7 @@ export type Database = {
           print_sides: string
           screenshot_path: string | null
           service: string
+          spiral_binding: boolean
           total_amount: number
           total_sides: number
           tracking_token: string
@@ -75,6 +101,7 @@ export type Database = {
           utr: string | null
         }
         Insert: {
+          binding_amount?: number
           color_mode: string
           copies: number
           created_at?: string
@@ -91,6 +118,7 @@ export type Database = {
           print_sides?: string
           screenshot_path?: string | null
           service: string
+          spiral_binding?: boolean
           total_amount: number
           total_sides: number
           tracking_token?: string
@@ -98,6 +126,7 @@ export type Database = {
           utr?: string | null
         }
         Update: {
+          binding_amount?: number
           color_mode?: string
           copies?: number
           created_at?: string
@@ -114,6 +143,7 @@ export type Database = {
           print_sides?: string
           screenshot_path?: string | null
           service?: string
+          spiral_binding?: boolean
           total_amount?: number
           total_sides?: number
           tracking_token?: string
@@ -216,6 +246,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      customer_binding_prices: {
+        Args: never
+        Returns: {
+          max_pages: number
+          min_pages: number
+          price: number
+        }[]
+      }
       customer_pricing: {
         Args: never
         Returns: {
@@ -246,6 +284,7 @@ export type Database = {
           upi_id: string
         }[]
       }
+      quote_binding: { Args: { _pages: number }; Returns: number }
       quote_print: {
         Args: {
           _color_mode: string
