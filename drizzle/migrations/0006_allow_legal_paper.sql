@@ -1,0 +1,2 @@
+ALTER TABLE public.service_pricing DROP CONSTRAINT service_pricing_paper_size_check;
+ALTER TABLE public.service_pricing ADD CONSTRAINT service_pricing_paper_size_check CHECK (paper_size IN ('A4','A3','Legal'));

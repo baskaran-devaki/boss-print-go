@@ -76,7 +76,7 @@ function PrintDashboard() {
   const [errors, setErrors] = useState<{ name: string; code: UploadErrorCode }[]>([]);
   const [color, setColor] = useState<"bw" | "color">("bw");
   const [sides, setSides] = useState<"single" | "double">("single");
-  const [size, setSize] = useState<"A4" | "A3">("A4");
+  const [size, setSize] = useState<"A4" | "A3" | "Legal">("A4");
   const [copies, setCopies] = useState(1);
   const name = customer?.name ?? "";
   const mobile = customer?.mobile ?? "";
@@ -202,7 +202,7 @@ function PrintDashboard() {
             <p className="text-muted-foreground">{t.sides}</p>
             <Seg value={sides} onChange={setSides} options={[["single", t.single], ["double", t.double]]} />
             <p className="text-muted-foreground">{t.size}</p>
-            <Seg value={size} onChange={setSize} options={[["A4", "A4"], ["A3", "A3"]]} />
+            <Seg value={size} onChange={setSize} options={[["A4", "A4"], ["A3", "A3"], ["Legal", "Legal"]]} />
             <div className="flex items-center justify-between pt-1">
               <span className="text-muted-foreground">{t.copies}</span>
               <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const pricingSchema = z.object({
   service: z.enum(["printout"]),
-  paper_size: z.enum(["A4", "A3"]),
+  paper_size: z.enum(["A4", "A3", "Legal"]),
   color_mode: z.enum(["bw", "color"]),
   standard_rate: z.number().positive().max(100000).multipleOf(0.01),
   bulk_rate: z.number().positive().max(100000).multipleOf(0.01),
@@ -15,7 +15,7 @@ export function requireAdminAccess(isAdmin: unknown) {
 }
 export type Pricing = Omit<PricingInput, "service" | "paper_size" | "color_mode"> & { id: string; service: string; paper_size: string; color_mode: string };
 export const quoteSchema = z.object({
-  service: z.enum(["printout"]), paperSize: z.enum(["A4", "A3"]), colorMode: z.enum(["bw", "color"]),
+  service: z.enum(["printout"]), paperSize: z.enum(["A4", "A3", "Legal"]), colorMode: z.enum(["bw", "color"]),
   pages: z.number().int().min(1).max(100000), copies: z.number().int().min(1).max(10000),
 });
 export function calculatePrice(pricing: Pricing, pages: number, copies: number) {
