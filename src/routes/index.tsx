@@ -138,7 +138,7 @@ function PrintDashboard() {
       setStage("submitting");
       // The server re-quotes pricing and refuses the order if the total the customer paid differs.
       const placed = await submitOrderFn({ data: {
-        customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color,
+        customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color, printSides: sides,
         pages, copies, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
       } });
       setOrder(placed);
