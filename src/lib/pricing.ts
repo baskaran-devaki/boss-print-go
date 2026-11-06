@@ -25,3 +25,15 @@ export function calculatePrice(pricing: Pricing, pages: number, copies: number) 
   const rate = sides >= pricing.bulk_threshold ? pricing.bulk_rate : pricing.standard_rate;
   return { sides, rate, amount: Math.round(sides * Math.round(rate * 100)) / 100 };
 }
+export const bindingRangeSchema = z.object({
+  min_pages: z.number().int().min(1).max(100000),
+  max_pages: z.number().int().min(1).max(100000),
+  price: z.number().min(0).max(100000).multipleOf(0.01),
+}).refine((r) => r.max_pages >= r.min_pages, { message: "To pages must be ≥ From pages", path: ["max_pages"] });
+export type BindingRange = z.infer<typeof bindingRangeSchema>;
+/** Spiral binding: one bind per copy (set), price picked from the page range. Returns null if no range matches. */
+export function bindingCharge(ranges: BindingRange[], pages: number, copies: number) {
+  const range = [...ranges].sort((a, b) => a.min_pages - b.min_pages).find((r) => pages >= r.min_pages && pages <= r.max_pages);
+  if (!range) return null;
+  return { perSet: range.price, amount: (Math.round(range.price * 100) * copies) / 100 };
+}

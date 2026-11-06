@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculatePrice, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
+import { bindingCharge, calculatePrice, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
 
 const printout: Pricing = { id: "p", service: "printout", paper_size: "A4", color_mode: "bw", standard_rate: 3, bulk_rate: 2, bulk_threshold: 50, available: true };
 const cheap: Pricing = { ...printout, standard_rate: 1, bulk_rate: 0.75 };
@@ -30,4 +30,12 @@ describe("service pricing", () => {
     expect(quoteSchema.safeParse({ ...input, pages: 1.5 }).success).toBe(false);
     expect(quoteSchema.parse({ ...input, amount: 0 })).not.toHaveProperty("amount");
   });
+});
+
+describe("spiral binding ranges", () => {
+  const ranges = [{ min_pages: 1, max_pages: 50, price: 50 }, { min_pages: 51, max_pages: 75, price: 60 }];
+  it("charges ₹50 for 1–50 pages", () => { expect(bindingCharge(ranges, 1, 1)?.amount).toBe(50); expect(bindingCharge(ranges, 50, 1)?.amount).toBe(50); });
+  it("charges ₹60 for 51–75 pages", () => expect(bindingCharge(ranges, 51, 1)?.amount).toBe(60));
+  it("charges one binding per copy", () => expect(bindingCharge(ranges, 60, 3)?.amount).toBe(180));
+  it("has no price outside configured ranges", () => expect(bindingCharge(ranges, 76, 1)).toBeNull());
 });

@@ -7,12 +7,13 @@ import { getCustomerPricing } from "@/lib/pricing.functions";
 import { getPaymentSettings, submitOrder } from "@/lib/orders.functions";
 import { CustomerShell, customerOptions, useCustomer } from "@/components/customer-shell";
 import { useQueryClient } from "@tanstack/react-query";
-import { calculatePrice } from "@/lib/pricing";
+import { bindingCharge, calculatePrice } from "@/lib/pricing";
 import { buildUpiUri, useQrDataUrl } from "@/lib/upi-qr";
 import { sanitizeFileName } from "@/lib/orders";
 import { Upload, Printer, User, Receipt, CreditCard, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { detectPages, printedSides, UploadError, type PrintFile, type UploadErrorCode } from "@/lib/print-files";
 
 const customerPricingOptions = queryOptions({ queryKey: ["customer-pricing"], queryFn: () => getCustomerPricing(), staleTime: 0 });
@@ -78,6 +79,7 @@ function PrintDashboard() {
   const [sides, setSides] = useState<"single" | "double">("single");
   const [size, setSize] = useState<"A4" | "A3" | "Legal">("A4");
   const [copies, setCopies] = useState(1);
+  const [spiral, setSpiral] = useState(false);
   const name = customer?.name ?? "";
   const mobile = customer?.mobile ?? "";
   const [utr, setUtr] = useState("");
@@ -90,14 +92,16 @@ function PrintDashboard() {
   const [copied, setCopied] = useState<"upi" | "gpay" | "link" | null>(null);
   const pages = files.reduce((sum, file) => sum + file.pages, 0);
   const totalSides = printedSides(pages, copies);
-  const pricing = pricingQuery.data.find((row) => row.service === service && row.paper_size === size && row.color_mode === color);
+  const pricing = pricingQuery.data.rates.find((row) => row.service === service && row.paper_size === size && row.color_mode === color);
   const calculation = pricing ? calculatePrice(pricing, pages, copies) : null;
   const per = calculation?.rate;
-  const total = calculation?.amount;
+  const binding = spiral && pages > 0 ? bindingCharge(pricingQuery.data.binding, pages, copies) : null;
+  const bindingMissing = spiral && pages > 0 && !binding;
+  const total = calculation && !bindingMissing ? (Math.round(calculation.amount * 100) + Math.round((binding?.amount ?? 0) * 100)) / 100 : undefined;
   const settings = settingsQuery.data;
   const trackingUrl = order ? `${window.location.origin}/track?t=${order.trackingToken}` : "";
   const qr = useQrDataUrl(settings.upiId && total !== undefined ? buildUpiUri(settings.upiId, settings.payeeName, total) : "");
-  useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per]);
+  useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per, spiral, total]);
 
   async function copyText(text: string, key: "upi" | "gpay" | "link") {
     try {
@@ -139,7 +143,7 @@ function PrintDashboard() {
       // The server re-quotes pricing and refuses the order if the total the customer paid differs.
       const placed = await submitOrderFn({ data: {
         customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color, printSides: sides,
-        pages, copies, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
+        pages, copies, spiralBinding: spiral, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
       } });
       setOrder(placed);
       void client.invalidateQueries({ queryKey: ["customer-orders"] });
@@ -211,6 +215,11 @@ function PrintDashboard() {
                 <Button variant="ghost" size="icon" className="btn-soft" aria-label="Increase copies" disabled={copies >= 10000} onClick={() => { setCopies(copies + 1); setOrder(null); }}><Plus /></Button>
               </div>
             </div>
+            <label className="flex items-center justify-between pt-1">
+              <span className="text-muted-foreground">{t.spiral}</span>
+              <Switch checked={spiral} onCheckedChange={setSpiral} aria-label={t.spiral} />
+            </label>
+            {bindingMissing && <p role="alert" className="text-xs text-destructive">{t.spiralNone}</p>}
           </div>
         </Card>
 
@@ -228,6 +237,7 @@ function PrintDashboard() {
             <div className="flex justify-between"><dt className="text-muted-foreground">{t.copies}</dt><dd>× {copies}</dd></div>
             <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.printedSides}</dt><dd aria-live="polite">{totalSides}</dd></div>
             {pricing && totalSides >= pricing.bulk_threshold && <div className="text-xs text-primary">{t.bulkApplied}</div>}
+            {binding && <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.spiralPrice} (₹{binding.perSet.toFixed(2)} × {copies})</dt><dd>₹{binding.amount.toFixed(2)}</dd></div>}
             <div className="flex justify-between border-t border-border pt-3 font-display text-2xl font-bold text-primary"><dt>{t.total}</dt><dd>{total === undefined ? "—" : `₹${total.toFixed(2)}`}</dd></div>
           </dl>
           {!pricing && <p role="alert" className="mt-3 text-sm text-destructive">{t.unavailable}</p>}
