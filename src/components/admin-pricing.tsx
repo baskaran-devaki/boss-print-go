@@ -53,7 +53,7 @@ export function AdminPricing() {
     {editing && <form className="space-y-4 border-y border-border py-4" onSubmit={(event) => { event.preventDefault(); void saveForm(); }}>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1 text-sm"><span>{t.service}</span><p className="input-pg bg-muted font-medium">PRINTOUT</p></div>
-        <label className="space-y-1 text-sm"><span>{t.size}</span><select className="input-pg" value={editing.pricing.paper_size} onChange={(e) => field("paper_size", e.target.value === "A4" ? "A4" : "A3")}><option>A4</option><option>A3</option></select></label>
+        <label className="space-y-1 text-sm"><span>{t.size}</span><select className="input-pg" value={editing.pricing.paper_size} onChange={(e) => field("paper_size", e.target.value as "A4" | "A3" | "Legal")}><option>A4</option><option>A3</option><option>Legal</option></select></label>
         <label className="space-y-1 text-sm"><span>{t.color}</span><select className="input-pg" value={editing.pricing.color_mode} onChange={(e) => field("color_mode", e.target.value === "bw" ? "bw" : "color")}><option value="bw">{t.bw}</option><option value="color">{t.colorful}</option></select></label>
         {([ ["standard_rate", t.standardRate], ["bulk_rate", t.bulkRate], ["bulk_threshold", t.bulkThreshold] ] as const).map(([key, label]) => <label key={key} className="space-y-1 text-sm"><span>{label}</span><input className="input-pg" type="number" required min={key === "bulk_threshold" ? 1 : 0.01} max={key === "bulk_threshold" ? 1000000 : 100000} step={key === "bulk_threshold" ? 1 : 0.01} value={Number.isNaN(editing.pricing[key]) ? "" : editing.pricing[key]} onChange={(e) => field(key, e.target.valueAsNumber)} /></label>)}
       </div>

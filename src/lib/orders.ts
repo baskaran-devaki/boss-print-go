@@ -14,7 +14,7 @@ export const submitOrderSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   mobile: optionalDigits,
   service: z.enum(["printout"]),
-  paperSize: z.enum(["A4", "A3"]),
+  paperSize: z.enum(["A4", "A3", "Legal"]),
   colorMode: z.enum(["bw", "color"]),
   pages: z.number().int().min(1).max(100000),
   copies: z.number().int().min(1).max(10000),
