@@ -16,6 +16,7 @@ export const submitOrderSchema = z.object({
   service: z.enum(["printout"]),
   paperSize: z.enum(["A4", "A3", "Legal"]),
   colorMode: z.enum(["bw", "color"]),
+  printSides: z.enum(["single", "double"]).default("single"),
   pages: z.number().int().min(1).max(100000),
   copies: z.number().int().min(1).max(10000),
   utr: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/).optional()),
@@ -53,6 +54,7 @@ export type OrderSummary = {
   service: string;
   paperSize: string;
   colorMode: string;
+  printSides: "single" | "double";
   pages: number;
   copies: number;
   totalSides: number;
