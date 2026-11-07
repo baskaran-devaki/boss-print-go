@@ -31,6 +31,15 @@ export const bindingRangeSchema = z.object({
   price: z.number().min(0).max(100000).multipleOf(0.01),
 }).refine((r) => r.max_pages >= r.min_pages, { message: "To pages must be ≥ From pages", path: ["max_pages"] });
 export type BindingRange = z.infer<typeof bindingRangeSchema>;
+/** Standard spiral coil sizes by sheet capacity (admin display only). */
+const COIL_SIZES: [maxSheets: number, label: string][] = [
+  [40, "8 mm"], [65, "10 mm"], [90, "12 mm"], [115, "14 mm"], [135, "16 mm"], [160, "19 mm"],
+  [195, "22 mm"], [230, "25 mm"], [260, "28 mm"], [290, "32 mm"], [330, "38 mm"], [390, "45 mm"], [440, "50 mm"],
+];
+/** Suggested spiral coil size for a page count (1 page ≈ 1 sheet). */
+export function coilSizeForPages(pages: number) {
+  return COIL_SIZES.find(([max]) => pages <= max)?.[1] ?? "50 mm+";
+}
 /** Spiral binding: one bind per copy (set), price picked from the page range. Returns null if no range matches. */
 export function bindingCharge(ranges: BindingRange[], pages: number, copies: number) {
   const range = [...ranges].sort((a, b) => a.min_pages - b.min_pages).find((r) => pages >= r.min_pages && pages <= r.max_pages);
