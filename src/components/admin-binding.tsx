@@ -49,13 +49,13 @@ export function AdminBinding() {
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {editing && <form className="space-y-4 border-y border-border py-4" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       <div className="grid gap-4 sm:grid-cols-3">
-        {([["min_pages", t.fromPages, 1], ["max_pages", t.toPages, 1], ["price", t.bindPrice, 0.01]] as const).map(([k, label, step]) =>
+        {([["min_pages", t.fromPaper, 1], ["max_pages", t.toPaper, 1], ["price", t.bindPrice, 0.01]] as const).map(([k, label, step]) =>
           <label key={k} className="space-y-1 text-sm"><span>{label}</span><input className="input-pg" type="number" required min={k === "price" ? 0 : 1} step={step} value={Number.isNaN(editing.range[k]) ? "" : editing.range[k]} onChange={(e) => set(k, e.target.valueAsNumber)} /></label>)}
       </div>
       <div className="flex gap-2"><Button type="submit" disabled={busy}><Save />{t.save}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(null)}><X />{t.cancel}</Button></div>
     </form>}
     {query.data && rows.length === 0 && <p className="text-muted-foreground">{t.noRanges}</p>}
-    {rows.length > 0 && <table className="w-full text-sm"><thead><tr className="border-b border-border text-left text-muted-foreground"><th className="py-3">{t.pages}</th><th>{t.bindPrice}</th><th>{t.coilSize}</th><th><span className="sr-only">{t.edit}</span></th></tr></thead>
+    {rows.length > 0 && <table className="w-full text-sm"><thead><tr className="border-b border-border text-left text-muted-foreground"><th className="py-3">{t.paper}</th><th>{t.bindPrice}</th><th>{t.coilSize}</th><th><span className="sr-only">{t.edit}</span></th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id} className="border-b border-border">
         <td className="py-3 font-medium">{r.min_pages} – {r.max_pages}</td><td>₹{r.price.toFixed(2)}</td><td className="text-muted-foreground">{coilSizeForPages(r.max_pages)}</td>
         <td><div className="flex justify-end"><Button variant="ghost" size="icon" aria-label={t.edit} onClick={() => { setEditing({ id: r.id, range: { min_pages: r.min_pages, max_pages: r.max_pages, price: r.price } }); setError(""); }}><Pencil /></Button><Button variant="ghost" size="icon" aria-label={t.deletePricing} disabled={busy} onClick={() => void del(r.id)}><Trash2 /></Button></div></td>
