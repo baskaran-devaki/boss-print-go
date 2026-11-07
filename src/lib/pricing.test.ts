@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bindingCharge, calculatePrice, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
+import { bindingCharge, calculatePrice, coilSizeForPages, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
 
 const printout: Pricing = { id: "p", service: "printout", paper_size: "A4", color_mode: "bw", standard_rate: 3, bulk_rate: 2, bulk_threshold: 50, available: true };
 const cheap: Pricing = { ...printout, standard_rate: 1, bulk_rate: 0.75 };
@@ -38,4 +38,11 @@ describe("spiral binding ranges", () => {
   it("charges ₹60 for 51–75 pages", () => expect(bindingCharge(ranges, 51, 1)?.amount).toBe(60));
   it("charges one binding per copy", () => expect(bindingCharge(ranges, 60, 3)?.amount).toBe(180));
   it("has no price outside configured ranges", () => expect(bindingCharge(ranges, 76, 1)).toBeNull());
+  it("suggests coil sizes from the page count", () => {
+    expect(coilSizeForPages(1)).toBe("8 mm");
+    expect(coilSizeForPages(50)).toBe("10 mm");
+    expect(coilSizeForPages(75)).toBe("12 mm");
+    expect(coilSizeForPages(440)).toBe("50 mm");
+    expect(coilSizeForPages(441)).toBe("50 mm+");
+  });
 });

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteBinding, getAdminBinding, saveBinding } from "@/lib/pricing.functions";
-import { bindingRangeSchema, type BindingRange } from "@/lib/pricing";
+import { bindingRangeSchema, coilSizeForPages, type BindingRange } from "@/lib/pricing";
 import { useLang } from "@/lib/i18n";
 
 export function AdminBinding() {
@@ -55,9 +55,9 @@ export function AdminBinding() {
       <div className="flex gap-2"><Button type="submit" disabled={busy}><Save />{t.save}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(null)}><X />{t.cancel}</Button></div>
     </form>}
     {query.data && rows.length === 0 && <p className="text-muted-foreground">{t.noRanges}</p>}
-    {rows.length > 0 && <table className="w-full text-sm"><thead><tr className="border-b border-border text-left text-muted-foreground"><th className="py-3">{t.pages}</th><th>{t.bindPrice}</th><th><span className="sr-only">{t.edit}</span></th></tr></thead>
+    {rows.length > 0 && <table className="w-full text-sm"><thead><tr className="border-b border-border text-left text-muted-foreground"><th className="py-3">{t.pages}</th><th>{t.bindPrice}</th><th>{t.coilSize}</th><th><span className="sr-only">{t.edit}</span></th></tr></thead>
       <tbody>{rows.map((r) => <tr key={r.id} className="border-b border-border">
-        <td className="py-3 font-medium">{r.min_pages} – {r.max_pages}</td><td>₹{r.price.toFixed(2)}</td>
+        <td className="py-3 font-medium">{r.min_pages} – {r.max_pages}</td><td>₹{r.price.toFixed(2)}</td><td className="text-muted-foreground">{coilSizeForPages(r.max_pages)}</td>
         <td><div className="flex justify-end"><Button variant="ghost" size="icon" aria-label={t.edit} onClick={() => { setEditing({ id: r.id, range: { min_pages: r.min_pages, max_pages: r.max_pages, price: r.price } }); setError(""); }}><Pencil /></Button><Button variant="ghost" size="icon" aria-label={t.deletePricing} disabled={busy} onClick={() => void del(r.id)}><Trash2 /></Button></div></td>
       </tr>)}</tbody></table>}
   </section>;
