@@ -95,7 +95,7 @@ function PrintDashboard() {
   const pricing = pricingQuery.data.rates.find((row) => row.service === service && row.paper_size === size && row.color_mode === color);
   const calculation = pricing ? calculatePrice(pricing, pages, copies) : null;
   const per = calculation?.rate;
-  const binding = spiral && pages > 0 ? bindingCharge(pricingQuery.data.binding, pages, copies) : null;
+  const binding = spiral && pages > 0 ? bindingCharge(pricingQuery.data.binding, pages, copies, sides) : null;
   const bindingMissing = spiral && pages > 0 && !binding;
   const total = calculation && !bindingMissing ? (Math.round(calculation.amount * 100) + Math.round((binding?.amount ?? 0) * 100)) / 100 : undefined;
   const settings = settingsQuery.data;

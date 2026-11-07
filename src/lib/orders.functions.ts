@@ -12,7 +12,7 @@ import {
   type PaymentSettings,
   type TrackedOrder,
 } from "./orders";
-import { requireAdminAccess } from "./pricing";
+import { bindingPaperCount, requireAdminAccess } from "./pricing";
 
 // Public publishable client: only reads data exposed through narrow security-definer RPCs.
 function publicClient() {
@@ -63,8 +63,8 @@ export const submitOrder = createServerFn({ method: "POST" })
     const totalSides = Number(quote.total_sides);
     let bindingAmount = 0;
     if (data.spiralBinding) {
-      const { data: perSet, error: bindError } = await publicClient().rpc("quote_binding", { _pages: data.pages });
-      if (bindError || perSet === null || perSet === undefined) throw new Error("Spiral binding is unavailable for this page count.");
+      const { data: perSet, error: bindError } = await publicClient().rpc("quote_binding", { _pages: bindingPaperCount(data.pages, data.printSides) });
+      if (bindError || perSet === null || perSet === undefined) throw new Error("Spiral binding is unavailable for this paper count.");
       bindingAmount = (Math.round(Number(perSet) * 100) * data.copies) / 100;
     }
     const totalAmount = (Math.round(Number(quote.total_amount) * 100) + Math.round(bindingAmount * 100)) / 100;
