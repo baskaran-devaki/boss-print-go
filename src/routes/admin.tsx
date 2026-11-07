@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth-provider";
 import { AdminPricing } from "@/components/admin-pricing";
+import { AdminBinding } from "@/components/admin-binding";
 import { AdminCustomers } from "@/components/admin-customers";
 import { getAdminCustomers } from "@/lib/customers.functions";
 import { AdminOrders } from "@/components/admin-orders";
@@ -110,7 +111,7 @@ function Admin() {
           <LangToggle />
         </header>
         <main className="space-y-4 p-4">
-          {tab === "customers" ? <AdminCustomers /> : tab === "pricing" ? <AdminPricing /> : tab === "payments" ? <AdminPaymentSettings /> : tab === "orders" ? <AdminOrders /> : (
+          {tab === "customers" ? <AdminCustomers /> : tab === "pricing" ? <><AdminPricing /><AdminBinding /></> : tab === "payments" ? <AdminPaymentSettings /> : tab === "orders" ? <AdminOrders /> : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[[t.customers, String(customersQuery.data?.count ?? 0), Users], [t.orders, String(orderStats.count), ListOrdered], [t.revenue, `₹${orderStats.revenue.toLocaleString("en-IN")}`, IndianRupee], [t.pending, String(orderStats.pending), Clock]].map(([l, v, I]: any) => (
