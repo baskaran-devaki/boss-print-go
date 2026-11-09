@@ -1,4 +1,5 @@
 # Service pricing
+- [ ] Update binding labels to Paper and verify shared double-sided sheet pricing.
 - [x] Persist pricing with admin-only writes and safe public rate reads.
 - [x] Add service selection and precise bulk calculation to the customer dashboard.
 - [x] Replace mock admin sign-in and add pricing CRUD.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculatePrice, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
+import { bindingCharge, bindingPaperCount, calculatePrice, coilSizeForPages, pricingSchema, quoteSchema, requireAdminAccess, type Pricing } from "./pricing";
 
 const printout: Pricing = { id: "p", service: "printout", paper_size: "A4", color_mode: "bw", standard_rate: 3, bulk_rate: 2, bulk_threshold: 50, available: true };
 const cheap: Pricing = { ...printout, standard_rate: 1, bulk_rate: 0.75 };
@@ -29,5 +29,34 @@ describe("service pricing", () => {
     expect(quoteSchema.safeParse({ ...input, copies: 0 }).success).toBe(false);
     expect(quoteSchema.safeParse({ ...input, pages: 1.5 }).success).toBe(false);
     expect(quoteSchema.parse({ ...input, amount: 0 })).not.toHaveProperty("amount");
+  });
+});
+
+describe("spiral binding ranges", () => {
+  it("prices 230 double-sided pages using the 115-paper range", () => {
+    const paperRanges = [{ min_pages: 101, max_pages: 115, price: 90 }, { min_pages: 116, max_pages: 250, price: 150 }];
+    expect(bindingPaperCount(230, "double")).toBe(115);
+    expect(bindingCharge(paperRanges, 230, 1, "double")?.amount).toBe(90);
+    expect(bindingCharge(paperRanges, 230, 1, "single")?.amount).toBe(150);
+  });
+  it("rounds odd double-sided page counts up to a whole paper", () => {
+    expect(bindingPaperCount(231, "double")).toBe(116);
+    expect(bindingPaperCount(1, "double")).toBe(1);
+  });
+  it("charges the paper-range price per set without reducing printing sides", () => {
+    expect(bindingCharge([{ min_pages: 101, max_pages: 115, price: 90 }], 230, 3, "double")?.amount).toBe(270);
+    expect(calculatePrice(printout, 230, 3)).toEqual({ sides: 690, rate: 2, amount: 1380 });
+  });
+  const ranges = [{ min_pages: 1, max_pages: 50, price: 50 }, { min_pages: 51, max_pages: 75, price: 60 }];
+  it("charges ₹50 for 1–50 pages", () => { expect(bindingCharge(ranges, 1, 1)?.amount).toBe(50); expect(bindingCharge(ranges, 50, 1)?.amount).toBe(50); });
+  it("charges ₹60 for 51–75 pages", () => expect(bindingCharge(ranges, 51, 1)?.amount).toBe(60));
+  it("charges one binding per copy", () => expect(bindingCharge(ranges, 60, 3)?.amount).toBe(180));
+  it("has no price outside configured ranges", () => expect(bindingCharge(ranges, 76, 1)).toBeNull());
+  it("suggests coil sizes from the page count", () => {
+    expect(coilSizeForPages(1)).toBe("8 mm");
+    expect(coilSizeForPages(50)).toBe("10 mm");
+    expect(coilSizeForPages(75)).toBe("12 mm");
+    expect(coilSizeForPages(440)).toBe("50 mm");
+    expect(coilSizeForPages(441)).toBe("50 mm+");
   });
 });

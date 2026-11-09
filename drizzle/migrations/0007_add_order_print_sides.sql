@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN print_sides text NOT NULL DEFAULT 'single' CHECK (print_sides IN ('single','double'));

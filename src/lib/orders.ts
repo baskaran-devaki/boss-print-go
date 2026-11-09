@@ -14,10 +14,12 @@ export const submitOrderSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   mobile: optionalDigits,
   service: z.enum(["printout"]),
-  paperSize: z.enum(["A4", "A3"]),
+  paperSize: z.enum(["A4", "A3", "Legal"]),
   colorMode: z.enum(["bw", "color"]),
+  printSides: z.enum(["single", "double"]).default("single"),
   pages: z.number().int().min(1).max(100000),
   copies: z.number().int().min(1).max(10000),
+  spiralBinding: z.boolean().default(false),
   utr: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/).optional()),
   filePaths: z.array(z.string().min(1).max(300)).min(1).max(500),
   screenshotPath: z.string().min(1).max(300).optional(),
@@ -53,6 +55,9 @@ export type OrderSummary = {
   service: string;
   paperSize: string;
   colorMode: string;
+  printSides: "single" | "double";
+  spiralBinding: boolean;
+  bindingAmount: number;
   pages: number;
   copies: number;
   totalSides: number;

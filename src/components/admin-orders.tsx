@@ -76,7 +76,7 @@ export function AdminOrders() {
                 <tr key={o.id} className="border-t border-border align-top">
                   <td className="py-3 pr-3 font-medium">{o.orderCode}</td>
                   <td className="pr-3">{o.customerName}<p className="text-xs text-muted-foreground">{o.mobile ?? "—"}</p></td>
-                  <td className="pr-3">{o.service.toUpperCase()}<p className="text-xs text-muted-foreground">{o.paperSize} · {o.colorMode === "bw" ? t.bw : t.colorful} · {o.pages}×{o.copies} = {o.totalSides}</p></td>
+                  <td className="pr-3">{o.service.toUpperCase()}<p className="text-xs text-muted-foreground">{o.paperSize} · {o.colorMode === "bw" ? t.bw : t.colorful} · <span className="font-semibold text-primary">{o.printSides === "double" ? t.double : t.single}</span>{o.spiralBinding && <> · <span className="font-semibold text-primary">{t.spiral} (₹{o.bindingAmount.toFixed(2)})</span></>} · {o.pages}×{o.copies} = {o.totalSides}</p></td>
                   <td className="pr-3 font-semibold">₹{o.totalAmount.toFixed(2)}</td>
                   <td className="pr-3 break-all">{o.utr ?? "—"}</td>
                   <td className="pr-3">
