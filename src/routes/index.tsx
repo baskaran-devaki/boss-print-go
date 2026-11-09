@@ -1,3 +1,4 @@
+import { ShopOrderGate } from "@/components/shop-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
@@ -60,7 +61,7 @@ function Seg<T extends string>({ value, options, onChange }: { value: T; options
 
 function Index() {
   const customer = useCustomer();
-  return <CustomerShell page="dashboard">{customer && <PrintDashboard key={customer.id} />}</CustomerShell>;
+  return <CustomerShell page="dashboard">{customer && <ShopOrderGate><PrintDashboard key={customer.id} /></ShopOrderGate>}</CustomerShell>;
 }
 
 function PrintDashboard() {

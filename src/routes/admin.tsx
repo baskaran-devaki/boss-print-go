@@ -1,3 +1,4 @@
+import { AdminShopStatus } from "@/components/shop-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -109,7 +110,7 @@ function Admin() {
           <h1 className="font-display font-semibold">{tab === "customers" ? t.customers : tab === "dash" ? t.dashboard : tab === "payments" ? t.paymentSettings : tab === "pricing" ? t.pricingSettings : t.orders}</h1>
           <LangToggle />
         </header>
-        <main className="space-y-4 p-4">
+        <main className="space-y-4 p-4"><AdminShopStatus />
           {tab === "customers" ? <AdminCustomers /> : tab === "pricing" ? <AdminPricing /> : tab === "payments" ? <AdminPaymentSettings /> : tab === "orders" ? <AdminOrders /> : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
