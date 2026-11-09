@@ -31,7 +31,7 @@ export const getShopStatus = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store");
     const { data, error } = await statusClient()
       .from("shop_status")
-      .select("is_open")
+      .select("is_open, closure_reason, reopens_at")
       .eq("id", true)
       .single();
 
@@ -39,12 +39,20 @@ export const getShopStatus = createServerFn({ method: "GET" })
       throw new Error("Could not check shop status. Please retry.");
     }
 
-    return { isOpen: data.is_open };
+    return {
+      isOpen: data.is_open as boolean,
+      closureReason: String(data.closure_reason ?? ""),
+      reopensAt: (data.reopens_at ?? null) as string | null,
+    };
   });
 
 export const setShopStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ isOpen: z.boolean() }).parse(input))
+  .inputValidator((input) => z.object({
+    isOpen: z.boolean(),
+    closureReason: z.string().trim().max(300).default(""),
+    reopensAt: z.string().datetime().nullable().default(null),
+  }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: allowed, error: roleError } = await context.supabase.rpc(
       "has_role",
@@ -53,25 +61,23 @@ export const setShopStatus = createServerFn({ method: "POST" })
     if (roleError) throw new Error("Could not verify admin access.");
     requireAdminAccess(allowed);
 
-    // Use a client without generated table types for this newly added table.
-    // The authenticated user's token still enforces the database RLS policy.
-    const { data: session, error: sessionError } = await context.supabase.auth.getSession();
-    if (sessionError || !session.session) throw new Error("Please sign in again.");
-
-    const client = statusClient();
-    const { error: authError } = await client.auth.setSession({
-      access_token: session.session.access_token,
-      refresh_token: session.session.refresh_token,
-    });
-    if (authError) throw new Error("Please sign in again.");
+    const client = context.supabase as unknown as import('@supabase/supabase-js').SupabaseClient;
 
     const { data: saved, error } = await client
       .from("shop_status")
-      .update({ is_open: data.isOpen })
+      .update({
+        is_open: data.isOpen,
+        closure_reason: data.isOpen ? "" : data.closureReason,
+        reopens_at: data.isOpen ? null : data.reopensAt,
+      })
       .eq("id", true)
-      .select("is_open")
+      .select("is_open, closure_reason, reopens_at")
       .single();
 
     if (error || !saved) throw new Error("Could not save shop status.");
-    return { isOpen: saved.is_open as boolean };
+    return {
+      isOpen: saved.is_open as boolean,
+      closureReason: String(saved.closure_reason ?? ""),
+      reopensAt: (saved.reopens_at ?? null) as string | null,
+    };
   });
