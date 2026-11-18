@@ -72,7 +72,7 @@ export const trackOrder = createServerFn({ method: "POST" })
 
 export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }): Promise<OrderSummary[]> => {
   await requireAdmin(context);
-  const { data, error } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+  const { data, error } = await context.supabase.from("orders").select("*").or("payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)").order("created_at", { ascending: false }).limit(200);
   if (error) throw new Error("Could not load orders");
   return (data ?? []).map((o) => ({
     id: o.id,
@@ -92,6 +92,7 @@ export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requ
     utr: o.utr,
     filePaths: Array.isArray(o.file_paths) ? (o.file_paths as string[]) : [],
     screenshotPath: o.screenshot_path,
+    paymentProvider: (o as unknown as { payment_provider?: string }).payment_provider ?? "manual",
     paymentStatus: o["payment_status"],
     orderStatus: o["order_status"],
     createdAt: o.created_at,
@@ -106,7 +107,10 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
     if (data.paymentStatus) patch.payment_status = data.paymentStatus;
     if (data.orderStatus) patch.order_status = data.orderStatus;
     if (Object.keys(patch).length === 0) throw new Error("Nothing to update");
-    const { error } = await context.supabase.from("orders").update(patch).eq("id", data.id);
+    let update = context.supabase.from("orders").update(patch).eq("id", data.id);
+    // Gateway payment status is controlled only by server capture verification.
+    if (data.paymentStatus) update = update.filter("payment_provider", "neq", "razorpay");
+    const { error } = await update.select("id").single();
     if (error) throw new Error("Could not update the order");
     return { ok: true };
   });

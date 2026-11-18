@@ -53,8 +53,8 @@ export const getCustomerOrders = createServerFn({ method: "GET" }).handler(async
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const columns = "order_code,tracking_token,payment_status,order_status,total_amount,total_sides,pages,copies,created_at" as const;
   const [history, active] = await Promise.all([
-    supabaseAdmin.from("orders").select(columns).eq("customer_id", customer.id).gte("created_at", indiaMonthStart()).order("created_at", { ascending: false }),
-    supabaseAdmin.from("orders").select(columns).eq("customer_id", customer.id).neq("order_status", "picked_up").order("created_at", { ascending: false }),
+    supabaseAdmin.from("orders").select(columns).or("payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)").eq("customer_id", customer.id).gte("created_at", indiaMonthStart()).order("created_at", { ascending: false }),
+    supabaseAdmin.from("orders").select(columns).or("payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)").eq("customer_id", customer.id).neq("order_status", "picked_up").order("created_at", { ascending: false }),
   ]);
   if (history.error || active.error) throw new Error("Could not load your orders. Please try again.");
   return { history: history.data ?? [], active: active.data ?? [] };

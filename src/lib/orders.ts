@@ -67,6 +67,7 @@ export type OrderSummary = {
   utr: string | null;
   filePaths: string[];
   screenshotPath: string | null;
+  paymentProvider?: string;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   createdAt: string;

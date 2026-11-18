@@ -1,5 +1,7 @@
 # Razorpay Standard Web Checkout
 
+Update: [payment-cancellation-upi.md](payment-cancellation-upi.md) supersedes the saved-payment buttons and Android limitation below. Apply that update for a fresh form on cancellation and native Android checkout.
+
 Implemented for the existing TanStack Start / React / Supabase app. The createCheckout and verifyCheckout POST server functions are the framework equivalents of create-order and verify-payment. Amounts come from the database quote, including binding sheet conversion, not from a trusted browser amount. The callback signature uses the database's order ID. Only a matching INR captured payment can mark an order verified. Manual receipts still require admin approval.
 
 ## Apply and configure

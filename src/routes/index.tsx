@@ -1,5 +1,5 @@
-import { createCheckout, verifyCheckout, checkCheckout, resumeCheckout } from "@/lib/razorpay.functions";
-import { openCheckout, loadCheckout } from "@/lib/razorpay-checkout";
+import { createCheckout, verifyCheckout, checkCheckout } from "@/lib/razorpay.functions";
+import { openCheckout, loadCheckout, CheckoutDismissed } from "@/lib/razorpay-checkout";
 import { ShopOrderGate } from "@/components/shop-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -7,11 +7,9 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getCustomerPricing } from "@/lib/pricing.functions";
-import { getPaymentSettings, submitOrder } from "@/lib/orders.functions";
 import { CustomerShell, customerOptions, useCustomer } from "@/components/customer-shell";
 import { useQueryClient } from "@tanstack/react-query";
 import { bindingCharge, calculatePrice } from "@/lib/pricing";
-import { buildUpiUri, useQrDataUrl } from "@/lib/upi-qr";
 import { sanitizeFileName } from "@/lib/orders";
 import { Upload, Printer, User, Receipt, CreditCard, FileText, Check, X, Minus, Plus, LoaderCircle, Copy } from "lucide-react";
 import { useLang } from "@/lib/i18n";
@@ -20,13 +18,11 @@ import { Switch } from "@/components/ui/switch";
 import { detectPages, printedSides, UploadError, type PrintFile, type UploadErrorCode } from "@/lib/print-files";
 
 const customerPricingOptions = queryOptions({ queryKey: ["customer-pricing"], queryFn: () => getCustomerPricing(), staleTime: 0 });
-const paymentSettingsOptions = queryOptions({ queryKey: ["payment-settings"], queryFn: () => getPaymentSettings(), staleTime: 0 });
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.ensureQueryData(customerOptions),
       context.queryClient.ensureQueryData(customerPricingOptions),
-      context.queryClient.ensureQueryData(paymentSettingsOptions),
     ]),
   head: () => ({
     meta: [
@@ -72,13 +68,12 @@ function PrintDashboard() {
   const customer = useCustomer();
   const client = useQueryClient();
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
-  const settingsQuery = useSuspenseQuery(paymentSettingsOptions);
   const submitOrderFn = useServerFn(createCheckout);
   const verifyPayment = useServerFn(verifyCheckout);
   const checkPayment = useServerFn(checkCheckout);
-  const resumePayment = useServerFn(resumeCheckout);
+
   const [paymentVerified, setPaymentVerified] = useState(false);
-  const [savedToken, setSavedToken] = useState<string | null>(null);
+
   const service = "printout" as const;
   const [files, setFiles] = useState<PrintFile[]>([]);
   const [pending, setPending] = useState(0);
@@ -90,9 +85,6 @@ function PrintDashboard() {
   const [spiral, setSpiral] = useState(false);
   const name = customer?.name ?? "";
   const mobile = customer?.mobile ?? "";
-  const [utr, setUtr] = useState("");
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotError, setScreenshotError] = useState("");
   const [order, setOrder] = useState<{ orderCode: string; trackingToken: string; totalAmount: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<"uploading" | "submitting">("submitting");
@@ -106,49 +98,54 @@ function PrintDashboard() {
   const binding = spiral && pages > 0 ? bindingCharge(pricingQuery.data.binding, pages, copies, sides) : null;
   const bindingMissing = spiral && pages > 0 && !binding;
   const total = calculation && !bindingMissing ? (Math.round(calculation.amount * 100) + Math.round((binding?.amount ?? 0) * 100)) / 100 : undefined;
-  const settings = settingsQuery.data;
   const trackingUrl = order ? `${window.location.origin}/track?t=${order.trackingToken}` : "";
-  const qr = useQrDataUrl(settings.upiId && total !== undefined ? buildUpiUri(settings.upiId, settings.payeeName, total) : "");
   useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per, spiral, total]);
 
-  useEffect(() => { setSavedToken(localStorage.getItem(`boss-payment-${customer?.id}`)); }, [customer?.id]);
+  // Recovery is silent: unpaid drafts never occupy the new-order page.
   useEffect(() => {
-    if (!savedToken) return;
-    const refresh = () => { void recoverPayment(); };
-    refresh();
-    window.addEventListener("focus", refresh);
-    return () => window.removeEventListener("focus", refresh);
-  }, [savedToken]);
-  async function recoverPayment() {
-    if (!savedToken) return;
-    setSubmitting(true); setSubmitError("");
-    try {
-      const result = await checkPayment({ data: { token: savedToken } });
-      if (!result.paid) { setSubmitError("Payment is not confirmed yet. Check again shortly. If money was deducted, do not pay again."); return; }
-      setOrder(result); setPaymentVerified(true);
-      localStorage.removeItem(`boss-payment-${customer?.id}`); setSavedToken(null);
-      void client.invalidateQueries({ queryKey: ["customer-orders"] });
-    } catch (e) { setSubmitError(e instanceof Error ? e.message : "Could not check payment."); }
-    finally { setSubmitting(false); }
-  }
-
-  async function retryPayment() {
-    if (!savedToken || submitting) return;
-    setSubmitting(true); setSubmitError("");
-    try {
-      const prepared = await resumePayment({ data: { token: savedToken } });
-      let result = prepared;
-      if (!prepared.paid) {
-        const response = await openCheckout({ key: prepared.key, amount: prepared.amount, currency: prepared.currency, order_id: prepared.orderId, name: "BOSS PrintGo", prefill: { name, ...(mobile ? { contact: mobile } : {}) } });
-        const verified = await verifyPayment({ data: { token: savedToken, ...response } });
-        result = { ...prepared, ...verified };
+    let checking = false;
+    let disposed = false;
+    const refresh = async () => {
+      if (checking) return;
+      checking = true;
+      for (const token of pendingPayments()) {
+        try {
+          const result = await checkPayment({ data: { token } });
+          if (result.paid) {
+            rememberPayment(token, false);
+            if (!disposed) void client.invalidateQueries({ queryKey: ["customer-orders"] });
+          }
+        } catch { /* Keep the server webhook as the recovery authority. */ }
       }
-      if (!result.paid) throw new Error("Payment is processing. Check payment status again shortly.");
-      setOrder(result); setPaymentVerified(true);
-      localStorage.removeItem(`boss-payment-${customer?.id}`); setSavedToken(null);
-      void client.invalidateQueries({ queryKey: ["customer-orders"] });
-    } catch (e) { setSubmitError(e instanceof Error ? e.message : "Payment unavailable."); }
-    finally { setSubmitting(false); }
+      checking = false;
+    };
+    void refresh();
+    const onFocus = () => { void refresh(); };
+    window.addEventListener("focus", onFocus);
+    const timer = window.setInterval(() => { void refresh(); }, 15000);
+    return () => { disposed = true; window.clearInterval(timer); window.removeEventListener("focus", onFocus); };
+  }, [customer?.id]);
+
+  function pendingPayments(): string[] {
+    try {
+      const old = localStorage.getItem(`boss-payment-${customer?.id}`);
+      const stored: unknown = JSON.parse(localStorage.getItem(`boss-payment-checks-${customer?.id}`) ?? "[]");
+      const tokens = Array.isArray(stored) ? stored.filter((v): v is string => typeof v === "string" && /^[a-f0-9]{48}$/.test(v)) : [];
+      return Array.from(new Set([...tokens, ...(old && /^[a-f0-9]{48}$/.test(old) ? [old] : [])]));
+    } catch { return []; }
+  }
+  function rememberPayment(token: string, keep: boolean) {
+    try {
+      const tokens = pendingPayments().filter((value) => value !== token);
+      if (keep) tokens.push(token);
+      localStorage.setItem(`boss-payment-checks-${customer?.id}`, JSON.stringify(tokens.slice(-20)));
+      localStorage.removeItem(`boss-payment-${customer?.id}`);
+    } catch { /* Storage can be unavailable; the webhook still confirms payment. */ }
+  }
+  function resetOrderForm() {
+    setFiles([]); setErrors([]); setColor("bw"); setSides("single");
+    setSize("A4"); setCopies(1); setSpiral(false); setOrder(null);
+    setPaymentVerified(false); setSubmitError("");
   }
 
   async function copyText(text: string, key: "upi" | "gpay" | "link") {
@@ -159,17 +156,10 @@ function PrintDashboard() {
     } catch { /* clipboard unavailable */ }
   }
 
-  function chooseScreenshot(file: File | null) {
-    if (!file) { setScreenshot(null); setScreenshotError(""); return; }
-    if (!["image/jpeg", "image/png"].includes(file.type) || !/\.(jpe?g|png)$/i.test(file.name)) { setScreenshotError(t.screenshotType); return; }
-    if (file.size > 5 * 1024 * 1024) { setScreenshotError(t.screenshotTooBig); return; }
-    setScreenshotError("");
-    setScreenshot(file);
-  }
-
   async function submit() {
     if (!pricing || total === undefined || pages < 1 || files.length === 0 || !name.trim() || submitting) return;
     setSubmitting(true); setSubmitError("");
+    let checkoutToken: string | undefined;
     try {
       await loadCheckout();
       setStage("uploading");
@@ -188,17 +178,21 @@ function PrintDashboard() {
         customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color, printSides: sides,
         pages, copies, spiralBinding: spiral, filePaths: paths, expectedTotal: total,
       } });
-      localStorage.setItem(`boss-payment-${customer?.id}`, placed.trackingToken);
-      setSavedToken(placed.trackingToken);
+      checkoutToken = placed.trackingToken;
+      rememberPayment(placed.trackingToken, true);
       const response = await openCheckout({ key: placed.key, amount: placed.amount, currency: placed.currency, order_id: placed.orderId, name: "BOSS PrintGo", prefill: { name, ...(mobile ? { contact: mobile } : {}) } });
       const result = await verifyPayment({ data: { token: placed.trackingToken, ...response } });
-      if (!result.paid) throw new Error("Payment is processing. Use Check payment status; do not pay again.");
+      if (!result.paid) throw new Error("Payment is processing. It will appear in Status after confirmation. Do not pay again.");
       setPaymentVerified(true);
       setOrder(result);
-      localStorage.removeItem(`boss-payment-${customer?.id}`);
-      setSavedToken(null);
+      rememberPayment(placed.trackingToken, false);
       void client.invalidateQueries({ queryKey: ["customer-orders"] });
     } catch (err) {
+      if (err instanceof CheckoutDismissed) {
+        if (checkoutToken) rememberPayment(checkoutToken, false);
+        resetOrderForm();
+        return;
+      }
       setSubmitError(err instanceof Error ? err.message : t.orderSubmitError);
       await pricingQuery.refetch();
     } finally {
@@ -311,10 +305,8 @@ function PrintDashboard() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Pay securely using UPI or card. Payment is confirmed automatically.</p>
-              {savedToken && <Button variant="outline" className="mt-3 w-full" disabled={submitting} onClick={() => void recoverPayment()}>Check payment status</Button>}
-              {savedToken && <Button variant="outline" className="mt-2 w-full" disabled={submitting} onClick={() => void retryPayment()}>Continue saved payment</Button>}
               <Button
-                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim() || !!savedToken}
+                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim()}
                 onClick={() => void submit()}
                 className="btn-primary-pg mt-3 w-full"
               >

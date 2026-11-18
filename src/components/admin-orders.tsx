@@ -81,10 +81,10 @@ export function AdminOrders() {
                   <td className="pr-3 break-all">{o.utr ?? "—"}</td>
                   <td className="pr-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.cls}`}>{badge.label}</span>
-                    <div className="mt-1 flex gap-1">
+                    {o.paymentProvider !== "razorpay" && <div className="mt-1 flex gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={busyId === o.id} title={t.verify} aria-label={`${t.verify} ${o.orderCode}`} onClick={() => void patch(o.id, { paymentStatus: "verified" })}><Check /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={busyId === o.id} title={t.reject} aria-label={`${t.reject} ${o.orderCode}`} onClick={() => void patch(o.id, { paymentStatus: "rejected" })}><X /></Button>
-                    </div>
+                    </div>}
                   </td>
                   <td className="pr-3">
                     <span className="rounded-full bg-accent px-2 py-1 text-xs text-primary">{t.status[statusIndex(o.orderStatus)]}</span>
