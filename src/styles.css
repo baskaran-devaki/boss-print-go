@@ -291,3 +291,18 @@ body { font-family: var(--font-sans); }
   }
 }
 /* END BOSS moving header tagline */
+
+/* BOSS login brand logo */
+.customer-entry .boss-login-logo {
+  display: block;
+  width: clamp(100px, 20svh, 160px);
+  height: auto;
+  max-width: 100%;
+  margin: 0 auto 8px;
+  object-fit: contain;
+}
+@media (max-height: 650px) {
+  .customer-entry .boss-login-logo {
+    width: 100px;
+  }
+}

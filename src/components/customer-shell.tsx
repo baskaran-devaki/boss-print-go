@@ -61,11 +61,10 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
   }
   const categories = { school_student: t.schoolStudent, college_student: t.collegeStudent, others: t.others };
   if (!customer) return <div className="customer-entry min-h-screen bg-background">
-    <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5"><Link to="/" className="flex items-center gap-2 font-display font-bold text-primary"><Printer />BOSS PrintGo</Link><LangToggle /></header>
+    <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5"><Link to="/" aria-label="BOSS PrintGo home" className="inline-flex h-11 w-11 items-center justify-center text-primary"><Printer className="h-7 w-7" aria-hidden="true" /></Link><LangToggle /></header>
     <main className="mx-auto max-w-md px-5 pb-10 pt-10 sm:pt-16">
       <div className="animate-rise mb-10 text-center">
-        <span className="hero-pg mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl text-primary-foreground shadow-[var(--shadow-card)]"><Printer className="h-10 w-10" /></span>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-primary sm:text-4xl">BOSS PrintGo</h1>
+        <img src="/boss-printgo-logo.png" alt="BOSS PrintGo" width="160" height="160" fetchPriority="high" className="boss-login-logo" />
         <p className="mt-3 font-display text-lg font-semibold leading-snug text-accent-foreground sm:text-xl">{t.loginTagline}</p>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{t.loginDescription}</p>
       </div>
