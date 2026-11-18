@@ -65,9 +65,9 @@ export function ShopOrderGate({ children }: { children: ReactNode }) {
         <span className="inline-block rounded-full bg-red-100 px-4 py-2 text-sm font-semibold text-red-700">
           Shop Closed
         </span>
-        <h2 className="text-xl font-bold">இன்று கடைக்கு விடுமுறை</h2>
+        <h2 className="text-xl font-bold">கடை மூடப்பட்டுள்ளது.</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          தற்போது புதிய ஆர்டர்கள் ஏற்கப்படவில்லை.
+          மன்னிக்கவும். தற்காலிகமாக புதிய ஆர்டர்கள் நிறுத்தப்பட்டுள்ளது.
           கடை திறந்ததும் ஆர்டர் செய்யலாம்.
         </p>
         {status.data.closureReason && (
