@@ -1,3 +1,5 @@
+import { createCheckout, verifyCheckout, checkCheckout, resumeCheckout } from "@/lib/razorpay.functions";
+import { openCheckout, loadCheckout } from "@/lib/razorpay-checkout";
 import { ShopOrderGate } from "@/components/shop-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -71,7 +73,12 @@ function PrintDashboard() {
   const client = useQueryClient();
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
   const settingsQuery = useSuspenseQuery(paymentSettingsOptions);
-  const submitOrderFn = useServerFn(submitOrder);
+  const submitOrderFn = useServerFn(createCheckout);
+  const verifyPayment = useServerFn(verifyCheckout);
+  const checkPayment = useServerFn(checkCheckout);
+  const resumePayment = useServerFn(resumeCheckout);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [savedToken, setSavedToken] = useState<string | null>(null);
   const service = "printout" as const;
   const [files, setFiles] = useState<PrintFile[]>([]);
   const [pending, setPending] = useState(0);
@@ -104,6 +111,46 @@ function PrintDashboard() {
   const qr = useQrDataUrl(settings.upiId && total !== undefined ? buildUpiUri(settings.upiId, settings.payeeName, total) : "");
   useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per, spiral, total]);
 
+  useEffect(() => { setSavedToken(localStorage.getItem(`boss-payment-${customer?.id}`)); }, [customer?.id]);
+  useEffect(() => {
+    if (!savedToken) return;
+    const refresh = () => { void recoverPayment(); };
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [savedToken]);
+  async function recoverPayment() {
+    if (!savedToken) return;
+    setSubmitting(true); setSubmitError("");
+    try {
+      const result = await checkPayment({ data: { token: savedToken } });
+      if (!result.paid) { setSubmitError("Payment is not confirmed yet. Check again shortly. If money was deducted, do not pay again."); return; }
+      setOrder(result); setPaymentVerified(true);
+      localStorage.removeItem(`boss-payment-${customer?.id}`); setSavedToken(null);
+      void client.invalidateQueries({ queryKey: ["customer-orders"] });
+    } catch (e) { setSubmitError(e instanceof Error ? e.message : "Could not check payment."); }
+    finally { setSubmitting(false); }
+  }
+
+  async function retryPayment() {
+    if (!savedToken || submitting) return;
+    setSubmitting(true); setSubmitError("");
+    try {
+      const prepared = await resumePayment({ data: { token: savedToken } });
+      let result = prepared;
+      if (!prepared.paid) {
+        const response = await openCheckout({ key: prepared.key, amount: prepared.amount, currency: prepared.currency, order_id: prepared.orderId, name: "BOSS PrintGo", prefill: { name, ...(mobile ? { contact: mobile } : {}) } });
+        const verified = await verifyPayment({ data: { token: savedToken, ...response } });
+        result = { ...prepared, ...verified };
+      }
+      if (!result.paid) throw new Error("Payment is processing. Check payment status again shortly.");
+      setOrder(result); setPaymentVerified(true);
+      localStorage.removeItem(`boss-payment-${customer?.id}`); setSavedToken(null);
+      void client.invalidateQueries({ queryKey: ["customer-orders"] });
+    } catch (e) { setSubmitError(e instanceof Error ? e.message : "Payment unavailable."); }
+    finally { setSubmitting(false); }
+  }
+
   async function copyText(text: string, key: "upi" | "gpay" | "link") {
     try {
       await navigator.clipboard.writeText(text);
@@ -121,9 +168,10 @@ function PrintDashboard() {
   }
 
   async function submit() {
-    if (!pricing || total === undefined || pages < 1 || files.length === 0 || !name.trim() || (!utr.trim() && !screenshot) || submitting) return;
+    if (!pricing || total === undefined || pages < 1 || files.length === 0 || !name.trim() || submitting) return;
     setSubmitting(true); setSubmitError("");
     try {
+      await loadCheckout();
       setStage("uploading");
       const uploadToken = crypto.randomUUID();
       const paths: string[] = [];
@@ -134,19 +182,21 @@ function PrintDashboard() {
         if (error) throw new Error(t.orderSubmitError);
         paths.push(path);
       }
-      let screenshotPath: string | undefined;
-      if (screenshot) {
-        screenshotPath = `${uploadToken}/screenshot-${sanitizeFileName(screenshot.name)}`;
-        const { error } = await supabase.storage.from("order-uploads").upload(screenshotPath, screenshot);
-        if (error) throw new Error(t.orderSubmitError);
-      }
       setStage("submitting");
       // The server re-quotes pricing and refuses the order if the total the customer paid differs.
       const placed = await submitOrderFn({ data: {
         customerName: name.trim(), mobile: mobile.trim(), service, paperSize: size, colorMode: color, printSides: sides,
-        pages, copies, spiralBinding: spiral, utr: utr.trim() || undefined, filePaths: paths, screenshotPath, expectedTotal: total,
+        pages, copies, spiralBinding: spiral, filePaths: paths, expectedTotal: total,
       } });
-      setOrder(placed);
+      localStorage.setItem(`boss-payment-${customer?.id}`, placed.trackingToken);
+      setSavedToken(placed.trackingToken);
+      const response = await openCheckout({ key: placed.key, amount: placed.amount, currency: placed.currency, order_id: placed.orderId, name: "BOSS PrintGo", prefill: { name, ...(mobile ? { contact: mobile } : {}) } });
+      const result = await verifyPayment({ data: { token: placed.trackingToken, ...response } });
+      if (!result.paid) throw new Error("Payment is processing. Use Check payment status; do not pay again.");
+      setPaymentVerified(true);
+      setOrder(result);
+      localStorage.removeItem(`boss-payment-${customer?.id}`);
+      setSavedToken(null);
       void client.invalidateQueries({ queryKey: ["customer-orders"] });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t.orderSubmitError);
@@ -248,10 +298,10 @@ function PrintDashboard() {
           {order ? (
             <div className="space-y-3 text-sm">
               <p className="flex items-center gap-2 font-display text-lg font-bold text-primary"><Check className="h-5 w-5" />{t.orderPlaced}</p>
-              <p className="text-muted-foreground">{t.orderPlacedHint}</p>
+              <p className="text-muted-foreground">Payment confirmed. Your order has been placed.</p>
               <div className="rounded-xl bg-muted px-3 py-2"><p className="text-xs text-muted-foreground">{t.orderId}</p><p className="font-display text-xl font-bold">{order.orderCode}</p></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t.total}</span><span className="font-semibold">₹{order.totalAmount.toFixed(2)}</span></div>
-              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">{t.paymentCol}</span><span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">{t.paymentPending}</span></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">{t.paymentCol}</span><span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">{paymentVerified ? "Payment verified" : t.paymentPending}</span></div>
               <div className="flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2">
                 <div className="min-w-0"><p className="text-xs text-muted-foreground">{t.trackingLink}</p><p className="truncate text-xs">{trackingUrl}</p></div>
                 <Button variant="ghost" size="icon" className="btn-soft shrink-0" aria-label={t.copyLink} onClick={() => void copyText(trackingUrl, "link")}><Copy /></Button>
@@ -260,44 +310,15 @@ function PrintDashboard() {
             </div>
           ) : (
             <>
-              <div className="mb-4 grid grid-cols-3 gap-2 text-center text-xs font-medium">
-                {["UPI", "GPay", "Card"].map((m) => <div key={m} className="rounded-xl border border-border py-3">{m}</div>)}
-              </div>
-              {settings.upiId && (
-                <div className="mb-2 flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-sm">
-                  <div className="min-w-0"><p className="text-xs text-muted-foreground">{t.upiId}</p><p className="break-all font-medium">{settings.upiId}</p></div>
-                  <Button variant="ghost" size="icon" className="btn-soft shrink-0" aria-label={`${t.copy} ${t.upiId}`} onClick={() => void copyText(settings.upiId, "upi")}><Copy /></Button>
-                </div>
-              )}
-              {settings.gpayNumber && (
-                <div className="mb-2 flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2 text-sm">
-                  <div className="min-w-0"><p className="text-xs text-muted-foreground">{t.gpayNumber}</p><p className="font-medium">{settings.gpayNumber}</p></div>
-                  <Button variant="ghost" size="icon" className="btn-soft shrink-0" aria-label={`${t.copy} ${t.gpayNumber}`} onClick={() => void copyText(settings.gpayNumber, "gpay")}><Copy /></Button>
-                </div>
-              )}
-              {copied === "upi" && <p role="status" className="mb-2 text-xs text-primary">{t.copied}</p>}
-              {copied === "gpay" && <p role="status" className="mb-2 text-xs text-primary">{t.copied}</p>}
-              {qr && (
-                <div className="mb-4 flex flex-col items-center gap-1 rounded-xl border border-border p-3">
-                  <img src={qr} alt={t.scanToPay} className="h-44 w-44" />
-                  <p className="text-xs text-muted-foreground">{t.scanToPay}{total !== undefined ? ` · ₹${total.toFixed(2)}` : ""}</p>
-                </div>
-              )}
-              {settings.qrImage && <img src={settings.qrImage} alt={t.currentQr} className="mx-auto mb-4 h-40 w-40 rounded-xl border border-border object-contain" />}
-              {!settings.upiId && <p role="alert" className="mb-3 text-sm text-destructive">{t.unavailable}</p>}
-              <input value={utr} onChange={(e) => setUtr(e.target.value)} placeholder={t.utrPlaceholder} aria-label={t.utr} maxLength={40} className="input-pg" />
-              <label className="mt-2 flex cursor-pointer items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-muted-foreground">
-                <Upload className="h-4 w-4 text-primary" />
-                <span className="min-w-0 truncate">{screenshot ? screenshot.name : t.screenshotOptional}</span>
-                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; chooseScreenshot(f ?? null); }} />
-              </label>
-              {screenshotError && <p role="alert" className="mt-2 text-sm text-destructive">{screenshotError}</p>}
+              <p className="text-sm text-muted-foreground">Pay securely using UPI or card. Payment is confirmed automatically.</p>
+              {savedToken && <Button variant="outline" className="mt-3 w-full" disabled={submitting} onClick={() => void recoverPayment()}>Check payment status</Button>}
+              {savedToken && <Button variant="outline" className="mt-2 w-full" disabled={submitting} onClick={() => void retryPayment()}>Continue saved payment</Button>}
               <Button
-                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim() || (!utr.trim() && !screenshot)}
+                disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim() || !!savedToken}
                 onClick={() => void submit()}
                 className="btn-primary-pg mt-3 w-full"
               >
-                {submitting ? (stage === "uploading" ? t.uploadHint : t.submittingOrder) : t.submitOrder}
+                {submitting ? (stage === "uploading" ? t.uploadHint : t.submittingOrder) : "Pay & Place Order"}
               </Button>
               {submitError && <p role="alert" className="mt-3 text-sm text-destructive">{submitError}</p>}
             </>

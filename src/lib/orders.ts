@@ -10,7 +10,7 @@ const optionalDigits = z.preprocess(
   z.string().regex(/^[0-9]{10}$/).optional(),
 );
 
-export const submitOrderSchema = z.object({
+export const checkoutOrderSchema = z.object({
   customerName: z.string().trim().min(1).max(100),
   mobile: optionalDigits,
   service: z.enum(["printout"]),
@@ -24,7 +24,9 @@ export const submitOrderSchema = z.object({
   filePaths: z.array(z.string().min(1).max(300)).min(1).max(500),
   screenshotPath: z.string().min(1).max(300).optional(),
   expectedTotal: z.number().multipleOf(0.01).min(0).max(10000000),
-}).refine((o) => !!o.utr || !!o.screenshotPath, { message: "Enter the UTR number or upload a payment screenshot.", path: ["utr"] });
+});
+
+export const submitOrderSchema = checkoutOrderSchema.refine((o) => !!o.utr || !!o.screenshotPath, { message: "Enter the UTR number or upload a payment screenshot.", path: ["utr"] });
 
 export const trackOrderSchema = z.object({ token: z.string().regex(/^[a-f0-9]{48}$/) });
 

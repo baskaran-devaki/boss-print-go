@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const TrackRoute = TrackRouteImport.update({
   path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
+  id: '/api/razorpay-webhook',
+  path: '/api/razorpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,23 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/history' | '/status' | '/track'
+  fullPaths:
+    '/' | '/admin' | '/history' | '/status' | '/track' | '/api/razorpay-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/history' | '/status' | '/track'
-  id: '__root__' | '/' | '/admin' | '/history' | '/status' | '/track'
+  to:
+    '/' | '/admin' | '/history' | '/status' | '/track' | '/api/razorpay-webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/history'
+    | '/status'
+    | '/track'
+    | '/api/razorpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +95,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   StatusRoute: typeof StatusRoute
   TrackRoute: typeof TrackRoute
+  ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/razorpay-webhook': {
+      id: '/api/razorpay-webhook'
+      path: '/api/razorpay-webhook'
+      fullPath: '/api/razorpay-webhook'
+      preLoaderRoute: typeof ApiRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +151,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   StatusRoute: StatusRoute,
   TrackRoute: TrackRoute,
+  ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

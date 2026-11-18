@@ -47,54 +47,8 @@ export const getPaymentSettings = createServerFn({ method: "GET" }).handler(asyn
 export const submitOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => submitOrderSchema.parse(input))
   .handler(async ({ data }) => {
-    const { findCustomer } = await import("./customers.server");
-    const customer = await findCustomer();
-    if (!customer) throw new Error("Please enter your customer details before ordering.");
-    // Storage paths are relative to the private "order-uploads" bucket.
-    const badPath = (p: string) => p.startsWith("/") || p.includes("..") || p.length > 300;
-    if (data.filePaths.some(badPath) || (data.screenshotPath && badPath(data.screenshotPath))) {
-      throw new Error("Invalid upload reference. Please try again.");
-    }
-    const { data: rows, error: quoteError } = await publicClient().rpc("quote_print", {
-      _service: data.service, _paper_size: data.paperSize, _color_mode: data.colorMode, _pages: data.pages, _copies: data.copies,
-    });
-    const quote = rows?.[0];
-    if (quoteError || !quote) throw new Error("This print option is unavailable. Refresh pricing and try again.");
-    const totalSides = Number(quote.total_sides);
-    let bindingAmount = 0;
-    if (data.spiralBinding) {
-      const { data: perSet, error: bindError } = await publicClient().rpc("quote_binding", { _pages: bindingPaperCount(data.pages, data.printSides) });
-      if (bindError || perSet === null || perSet === undefined) throw new Error("Spiral binding is unavailable for this paper count.");
-      bindingAmount = (Math.round(Number(perSet) * 100) * data.copies) / 100;
-    }
-    const totalAmount = (Math.round(Number(quote.total_amount) * 100) + Math.round(bindingAmount * 100)) / 100;
-    if (!Number.isFinite(totalAmount) || totalSides < 1) throw new Error("Could not calculate the order total. Please try again.");
-    if (data.expectedTotal !== totalAmount) throw new Error("Price changed. Review the updated total and try again.");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: order, error } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        customer_id: customer.id,
-        customer_name: customer.name,
-        mobile: customer.mobile,
-        service: data.service,
-        paper_size: data.paperSize,
-        color_mode: data.colorMode,
-        print_sides: data.printSides,
-        pages: data.pages,
-        copies: data.copies,
-        spiral_binding: data.spiralBinding,
-        binding_amount: bindingAmount,
-        total_sides: totalSides,
-        total_amount: totalAmount,
-        utr: data.utr ?? null,
-        file_paths: data.filePaths,
-        screenshot_path: data.screenshotPath ?? null,
-      })
-      .select("order_code, tracking_token")
-      .single();
-    if (error || !order) throw new Error("Could not submit the order. Please try again.");
-    return { orderCode: order.order_code, trackingToken: order.tracking_token, totalAmount };
+    const { createPrintOrder } = await import("./orders-create.server");
+    return createPrintOrder(data);
   });
 
 export const trackOrder = createServerFn({ method: "POST" })
