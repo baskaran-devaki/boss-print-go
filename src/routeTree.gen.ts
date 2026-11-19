@@ -14,7 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as ApiCleanupPickedUpRouteImport } from './routes/api/cleanup-picked-up'
 import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay-webhook'
@@ -44,9 +46,19 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackRoute = TrackRouteImport.update({
@@ -71,7 +83,9 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
@@ -82,7 +96,9 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
@@ -94,7 +110,9 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
@@ -107,7 +125,9 @@ export interface FileRouteTypes {
     | '/contact'
     | '/history'
     | '/privacy'
+    | '/refund-policy'
     | '/status'
+    | '/terms'
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
@@ -118,7 +138,9 @@ export interface FileRouteTypes {
     | '/contact'
     | '/history'
     | '/privacy'
+    | '/refund-policy'
     | '/status'
+    | '/terms'
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
@@ -129,7 +151,9 @@ export interface FileRouteTypes {
     | '/contact'
     | '/history'
     | '/privacy'
+    | '/refund-policy'
     | '/status'
+    | '/terms'
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
@@ -141,7 +165,9 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   HistoryRoute: typeof HistoryRoute
   PrivacyRoute: typeof PrivacyRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
   StatusRoute: typeof StatusRoute
+  TermsRoute: typeof TermsRoute
   TrackRoute: typeof TrackRoute
   ApiCleanupPickedUpRoute: typeof ApiCleanupPickedUpRoute
   ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
@@ -184,11 +210,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/status': {
       id: '/status'
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track': {
@@ -221,7 +261,9 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   HistoryRoute: HistoryRoute,
   PrivacyRoute: PrivacyRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
   StatusRoute: StatusRoute,
+  TermsRoute: TermsRoute,
   TrackRoute: TrackRoute,
   ApiCleanupPickedUpRoute: ApiCleanupPickedUpRoute,
   ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,

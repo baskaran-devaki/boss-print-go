@@ -64,7 +64,7 @@ function Index() {
 }
 
 function PrintDashboard() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const customer = useCustomer();
   const client = useQueryClient();
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
@@ -305,6 +305,7 @@ function PrintDashboard() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Pay securely using UPI or card. Payment is confirmed automatically.</p>
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{lang === "ta" ? "Order செய்வதற்கு முன் படிக்கவும்: " : "Before placing your order, review our "}<a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Terms & Conditions</a>{" · "}<a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cancellation & Refund Policy</a>.</p>
               <Button
                 disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim()}
                 onClick={() => void submit()}
