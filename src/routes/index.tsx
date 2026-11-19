@@ -1,7 +1,7 @@
 import { createCheckout, verifyCheckout, checkCheckout } from "@/lib/razorpay.functions";
 import { openCheckout, loadCheckout, CheckoutDismissed } from "@/lib/razorpay-checkout";
 import { ShopOrderGate } from "@/components/shop-status";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,7 +64,7 @@ function Index() {
 }
 
 function PrintDashboard() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const customer = useCustomer();
   const client = useQueryClient();
   const pricingQuery = useSuspenseQuery(customerPricingOptions);
@@ -305,7 +305,6 @@ function PrintDashboard() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Pay securely using UPI or card. Payment is confirmed automatically.</p>
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{lang === "ta" ? "Order செய்வதற்கு முன் படிக்கவும்: " : "Before placing your order, review our "}<a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Terms & Conditions</a>{" · "}<a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cancellation & Refund Policy</a>.</p>
               <Button
                 disabled={submitting || pending > 0 || pages === 0 || files.length === 0 || !pricing || !!order || !name.trim()}
                 onClick={() => void submit()}
@@ -319,7 +318,6 @@ function PrintDashboard() {
         </Card>
 
       </main>
-      <p className="mt-8 text-center text-xs text-muted-foreground"><Link to="/admin" className="underline">{t.admin}</Link></p>
     </>
   );
 }
