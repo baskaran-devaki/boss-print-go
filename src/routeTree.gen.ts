@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as ApiCleanupPickedUpRouteImport } from './routes/api/cleanup-picked-up'
 import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay-webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -26,9 +29,19 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusRoute = StatusRouteImport.update({
@@ -41,6 +54,11 @@ const TrackRoute = TrackRouteImport.update({
   path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCleanupPickedUpRoute = ApiCleanupPickedUpRouteImport.update({
+  id: '/api/cleanup-picked-up',
+  path: '/api/cleanup-picked-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
   id: '/api/razorpay-webhook',
   path: '/api/razorpay-webhook',
@@ -50,51 +68,82 @@ const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/contact': typeof ContactRoute
   '/history': typeof HistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/status': typeof StatusRoute
   '/track': typeof TrackRoute
+  '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/admin' | '/history' | '/status' | '/track' | '/api/razorpay-webhook'
+    | '/'
+    | '/admin'
+    | '/contact'
+    | '/history'
+    | '/privacy'
+    | '/status'
+    | '/track'
+    | '/api/cleanup-picked-up'
+    | '/api/razorpay-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/admin' | '/history' | '/status' | '/track' | '/api/razorpay-webhook'
+    | '/'
+    | '/admin'
+    | '/contact'
+    | '/history'
+    | '/privacy'
+    | '/status'
+    | '/track'
+    | '/api/cleanup-picked-up'
+    | '/api/razorpay-webhook'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/contact'
     | '/history'
+    | '/privacy'
     | '/status'
     | '/track'
+    | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  ContactRoute: typeof ContactRoute
   HistoryRoute: typeof HistoryRoute
+  PrivacyRoute: typeof PrivacyRoute
   StatusRoute: typeof StatusRoute
   TrackRoute: typeof TrackRoute
+  ApiCleanupPickedUpRoute: typeof ApiCleanupPickedUpRoute
   ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
 }
 
@@ -114,11 +163,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/history': {
       id: '/history'
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status': {
@@ -135,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cleanup-picked-up': {
+      id: '/api/cleanup-picked-up'
+      path: '/api/cleanup-picked-up'
+      fullPath: '/api/cleanup-picked-up'
+      preLoaderRoute: typeof ApiCleanupPickedUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/razorpay-webhook': {
       id: '/api/razorpay-webhook'
       path: '/api/razorpay-webhook'
@@ -148,9 +218,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  ContactRoute: ContactRoute,
   HistoryRoute: HistoryRoute,
+  PrivacyRoute: PrivacyRoute,
   StatusRoute: StatusRoute,
   TrackRoute: TrackRoute,
+  ApiCleanupPickedUpRoute: ApiCleanupPickedUpRoute,
   ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport

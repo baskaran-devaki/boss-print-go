@@ -1,3 +1,4 @@
+import { uploadsExpired } from "./order-retention";
 import { createServerFn } from "@tanstack/react-start";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -90,8 +91,8 @@ export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requ
     totalSides: Number(o.total_sides),
     totalAmount: Number(o.total_amount),
     utr: o.utr,
-    filePaths: Array.isArray(o.file_paths) ? (o.file_paths as string[]) : [],
-    screenshotPath: o.screenshot_path,
+    filePaths: !uploadsExpired(o as unknown as { picked_up_at?: string; files_deleted_at?: string }) && Array.isArray(o.file_paths) ? (o.file_paths as string[]) : [],
+    screenshotPath: uploadsExpired(o as unknown as { picked_up_at?: string; files_deleted_at?: string }) ? null : o.screenshot_path,
     paymentProvider: (o as unknown as { payment_provider?: string }).payment_provider ?? "manual",
     paymentStatus: o["payment_status"],
     orderStatus: o["order_status"],
@@ -122,7 +123,12 @@ export const getOrderFileUrls = createServerFn({ method: "POST" }).middleware([r
     await requireAdmin(context);
     if (data.paths.some((p) => p.startsWith("/") || p.includes(".."))) throw new Error("Invalid file reference");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: signed, error } = await supabaseAdmin.storage.from("order-uploads").createSignedUrls(data.paths, 600);
+    const db = supabaseAdmin as unknown as SupabaseClient;
+    const { data: allowed, error: accessError } = await db.rpc("live_order_uploads", { _paths: data.paths });
+    const rows = (allowed ?? []) as { path: string; ttl: number }[];
+    if (accessError || data.paths.some(path => !rows.some(row => row.path === path && row.ttl > 0))) throw new Error("These files expired or are unavailable.");
+    const ttl = Math.min(600, ...rows.map(row => row.ttl));
+    const { data: signed, error } = await supabaseAdmin.storage.from("order-uploads").createSignedUrls(data.paths, ttl);
     if (error || !signed) throw new Error("Could not open the files. Please try again.");
     return signed.map((file) => ({ path: file.path ?? "", url: file.signedUrl ?? "" }));
   });

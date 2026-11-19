@@ -1,3 +1,4 @@
+import { pickupCutoff } from "./order-retention";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, getRequest, setCookie, deleteCookie, setResponseHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -47,14 +48,17 @@ export const leaveCustomer = createServerFn({ method: "POST" }).handler(async ()
 });
 
 export const getCustomerOrders = createServerFn({ method: "GET" }).handler(async () => {
+  setResponseHeader("Cache-Control", "no-store");
   const { findCustomer } = await import("./customers.server");
   const customer = await findCustomer();
   if (!customer) return { history: [], active: [] };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const columns = "order_code,tracking_token,payment_status,order_status,total_amount,total_sides,pages,copies,created_at" as const;
+  // One logical group keeps paid-gateway visibility AND pickup retention enforced together.
+  const visibility = `and(or(payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)),or(picked_up_at.is.null,picked_up_at.gt.${pickupCutoff()}))`;
   const [history, active] = await Promise.all([
-    supabaseAdmin.from("orders").select(columns).or("payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)").eq("customer_id", customer.id).gte("created_at", indiaMonthStart()).order("created_at", { ascending: false }),
-    supabaseAdmin.from("orders").select(columns).or("payment_provider.neq.razorpay,and(payment_status.eq.verified,razorpay_payment_id.not.is.null)").eq("customer_id", customer.id).neq("order_status", "picked_up").order("created_at", { ascending: false }),
+    supabaseAdmin.from("orders").select(columns).or(visibility).eq("customer_id", customer.id).gte("created_at", indiaMonthStart()).order("created_at", { ascending: false }),
+    supabaseAdmin.from("orders").select(columns).or(visibility).eq("customer_id", customer.id).neq("order_status", "picked_up").order("created_at", { ascending: false }),
   ]);
   if (history.error || active.error) throw new Error("Could not load your orders. Please try again.");
   return { history: history.data ?? [], active: active.data ?? [] };

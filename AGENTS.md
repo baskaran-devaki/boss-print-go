@@ -20,3 +20,5 @@
 - Customer history is derived using the India-time calendar-month boundary on every read; this resets instantly without deleting admin orders or scheduling background work. Active orders remain available in Status across month boundaries.
 
 - Razorpay checkout records are drafts until capture verification: filter unpaid gateway drafts out of admin lists, customer history/status and public tracking. Keep drafts internally for late webhook recovery; cancellation must reset the new-order form without saved-payment controls. Native Android checkout goes through the registered BossRazorpay bridge; never substitute a WebView checkout for UPI intent.
+
+- First admin pickup stamps immutable picked_up_at in the database. Customer history/tracking and new signed file links expire 24 hours later. A separately authenticated scheduled Storage API cleanup deletes uploads/screenshots and clears references only after successful deletion, preserving financial rows. Do not calculate retention from order creation or delete Storage metadata through SQL.

@@ -1,3 +1,4 @@
+import { PolicyLinks } from "./public-info";
 import { ShopStatusBadge } from "@/components/shop-status";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -76,7 +77,7 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <Button disabled={busy} className="btn-primary-pg h-12 w-full">{busy ? "…" : t.continue}<ArrowRight className="h-4 w-4" /></Button>
       </form>
-      <Link to="/admin" className="mt-8 block text-center text-xs text-muted-foreground underline">{t.admin}</Link>
+      <div className="boss-login-links flex items-center justify-center gap-3 text-center text-xs text-muted-foreground"><Link to="/admin" className="underline">{t.admin}</Link><PolicyLinks /></div>
     </main>
   </div>;
   const tabs = [{ key: "dashboard", to: "/" as const, label: t.dashboard, icon: LayoutDashboard }, { key: "status", to: "/status" as const, label: t.statusTab, icon: PackageCheck }, { key: "history", to: "/history" as const, label: t.history, icon: History }];
@@ -84,6 +85,7 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
     <header className="sticky top-0 z-40 border-b border-border bg-card"><div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3"><Link to="/" className="flex min-w-0 items-center gap-2 font-display text-lg font-bold text-primary"><Printer className="h-6 w-6 shrink-0" />BOSS PrintGo</Link><div className="flex shrink-0 items-center gap-1"><ShopStatusBadge /><LangToggle /><Button variant="ghost" size="icon" disabled={busy} title={t.switchCustomer} aria-label={t.switchCustomer} onClick={() => void logout()}><LogOut className="h-4 w-4" /></Button></div></div><div className="boss-tagline-marquee mx-auto max-w-5xl pb-2 text-[11px] font-semibold tracking-wide text-primary/90"><p className="boss-tagline-track">{t.headerTagline}</p></div></header>
     <div className="mx-auto max-w-5xl px-4 pb-5 pt-6"><p className="text-xs text-muted-foreground">{t.welcome}</p><h1 className="mt-1 break-words font-display text-2xl font-bold">{customer.name}</h1><p className="mt-1 text-sm text-primary">{categories[customer.category]}</p>{error && <p role="alert" className="text-destructive">{error}</p>}</div>
     {children}
+    <footer className="px-4 py-5 text-center text-xs text-muted-foreground"><PolicyLinks /></footer>
     <nav aria-label="Customer navigation" className="customer-bottom-nav fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card"><div className="mx-auto grid max-w-xl grid-cols-3">{tabs.map(({ key, to, label, icon: Icon }) => <Link key={key} to={to} aria-current={page === key ? "page" : undefined} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-2 py-2 text-center text-xs font-semibold ${page === key ? "bg-accent text-primary" : "text-muted-foreground"}`}><Icon className="h-5 w-5" /><span className="break-words">{label}</span></Link>)}</div></nav>
   </div>;
 }

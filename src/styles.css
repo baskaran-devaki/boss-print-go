@@ -306,3 +306,7 @@ body { font-family: var(--font-sans); }
     width: 100px;
   }
 }
+
+/* Keep public policy links on the existing compact login footer line. */
+.customer-entry .boss-login-links { margin-top: 12px; }
+@media (max-height: 600px) { .customer-entry .boss-login-links { margin-top: 8px; } }
