@@ -26,7 +26,7 @@ export function AdminOrders() {
     setBusyId(id); setError("");
     try {
       await patchOrder({ data: { id, ...changes } });
-      await client.invalidateQueries({ queryKey: ["admin-orders"] });
+      await Promise.all([client.invalidateQueries({ queryKey: ["admin-orders"] }), client.invalidateQueries({ queryKey: ["admin-analytics"] })]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update the order");
     } finally {

@@ -1,3 +1,4 @@
+import { AdminAnalytics } from "@/components/admin-analytics";
 import { AdminShopStatus } from "@/components/shop-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -13,8 +14,7 @@ import { AdminOrders } from "@/components/admin-orders";
 import { AdminPaymentSettings } from "@/components/admin-payment-settings";
 import { Button } from "@/components/ui/button";
 import { checkAdmin } from "@/lib/pricing.functions";
-import { getAdminOrders } from "@/lib/orders.functions";
-import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Clock, Lock, Wallet, Users } from "lucide-react";
+import { LayoutDashboard, ListOrdered, LogOut, Printer, Menu, IndianRupee, Lock, Wallet, Users } from "lucide-react";
 import { useLang, LangToggle } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin")({
@@ -37,17 +37,9 @@ function Admin() {
   const { user, loading } = useAuth();
   const client = useQueryClient();
   const verifyAdmin = useServerFn(checkAdmin);
-  const fetchOrders = useServerFn(getAdminOrders);
   const admin = useQuery({ queryKey: ["admin-access", user?.id], queryFn: () => verifyAdmin(), enabled: !!user });
-  const ordersQuery = useQuery({ queryKey: ["admin-orders"], queryFn: () => fetchOrders(), enabled: !!user && !!admin.data });
   const fetchCustomers = useServerFn(getAdminCustomers);
   const customersQuery = useQuery({ queryKey: ["admin-customers"], queryFn: () => fetchCustomers(), enabled: !!user && !!admin.data, refetchInterval: 15_000 });
-  const ordersList = ordersQuery.data ?? [];
-  const orderStats = {
-    count: ordersList.length,
-    pending: ordersList.filter((o) => o.paymentStatus === "pending_verification").length,
-    revenue: ordersList.filter((o) => o.paymentStatus === "verified").reduce((sum, o) => sum + o.totalAmount, 0),
-  };
   const [tab, setTab] = useState<"dash" | "orders" | "payments" | "pricing" | "customers">("dash");
   const [loginError, setLoginError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
@@ -115,13 +107,8 @@ function Admin() {
           <AdminShopStatus />
           {tab === "customers" ? <AdminCustomers /> : tab === "pricing" ? <><AdminPricing /><AdminBinding /></> : tab === "payments" ? <AdminPaymentSettings /> : tab === "orders" ? <AdminOrders /> : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[[t.customers, String(customersQuery.data?.count ?? 0), Users], [t.orders, String(orderStats.count), ListOrdered], [t.revenue, `₹${orderStats.revenue.toLocaleString("en-IN")}`, IndianRupee], [t.pending, String(orderStats.pending), Clock]].map(([l, v, I]: any) => (
-                  <div key={l} className="card-pg animate-rise"><I className="mb-2 h-5 w-5 text-primary" /><p className="text-sm text-muted-foreground">{l}</p><p className="font-display text-3xl font-bold">{v}</p></div>
-                ))}
-              </div>
-              {ordersQuery.isPending && <p role="status">{t.loadingOrders}</p>}
-              {ordersQuery.error && <p role="alert" className="text-sm text-destructive">{ordersQuery.error.message}</p>}
+              <p className="flex items-center gap-2 text-sm text-muted-foreground"><Users className="h-4 w-4" />{t.customers}: {customersQuery.isPending ? "…" : customersQuery.isError ? "—" : customersQuery.data?.count ?? 0}</p>
+              <AdminAnalytics />
             </>
           )}
         </main>
