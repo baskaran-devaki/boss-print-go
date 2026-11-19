@@ -20,6 +20,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as ApiCleanupPickedUpRouteImport } from './routes/api/cleanup-picked-up'
 import { Route as ApiRazorpayWebhookRouteImport } from './routes/api/razorpay-webhook'
+import { Route as ApiShopStatusRouteImport } from './routes/api/shop-status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
   path: '/api/razorpay-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiShopStatusRoute = ApiShopStatusRouteImport.update({
+  id: '/api/shop-status',
+  path: '/api/shop-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
+  '/api/shop-status': typeof ApiShopStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
+  '/api/shop-status': typeof ApiShopStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/api/cleanup-picked-up': typeof ApiCleanupPickedUpRoute
   '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
+  '/api/shop-status': typeof ApiShopStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
+    | '/api/shop-status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
+    | '/api/shop-status'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/api/cleanup-picked-up'
     | '/api/razorpay-webhook'
+    | '/api/shop-status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   TrackRoute: typeof TrackRoute
   ApiCleanupPickedUpRoute: typeof ApiCleanupPickedUpRoute
   ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
+  ApiShopStatusRoute: typeof ApiShopStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/shop-status': {
+      id: '/api/shop-status'
+      path: '/api/shop-status'
+      fullPath: '/api/shop-status'
+      preLoaderRoute: typeof ApiShopStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRoute: TrackRoute,
   ApiCleanupPickedUpRoute: ApiCleanupPickedUpRoute,
   ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
+  ApiShopStatusRoute: ApiShopStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,19 +1,21 @@
-﻿import { type ReactNode, useState } from "react";
+import { requestShopStatus } from "@/lib/shop-status-client";
+import { type ReactNode, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getShopStatus, setShopStatus } from "@/lib/shop-status.functions";
+import { setShopStatus } from "@/lib/shop-status.functions";
 import { Button } from "./ui/button";
 
 function useShopStatus() {
-  const read = useServerFn(getShopStatus);
   return useQuery({
     queryKey: ["shop-status"],
-    queryFn: () => read(),
+    queryFn: ({ signal }) => requestShopStatus(signal),
+    networkMode: "always",
     staleTime: 0,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: "always",
-    retry: 1,
+    refetchOnReconnect: "always",
+    retry: false,
   });
 }
 
@@ -25,7 +27,7 @@ function reopeningText(value: string) {
   });
 }
 
-export function ShopStatusBadge() {
+export function ShopStatusBadge({ compact = false }: { compact?: boolean }) {
   const status = useShopStatus();
   const known = !!status.data && !status.isError;
   const open = known && status.data?.isOpen;
@@ -34,11 +36,12 @@ export function ShopStatusBadge() {
     <span
       role="status"
       className={
-        "rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap " +
-        (open ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")
+        "rounded-full px-2 font-semibold whitespace-nowrap " +
+        (compact ? "py-0.5 text-[9px] leading-3 " : "py-1 text-[10px] ") +
+        (!known ? "bg-muted text-muted-foreground" : open ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")
       }
     >
-      {!known ? "Checking..." : open ? "Shop Open" : "Shop Closed"}
+      {!known ? (status.isError ? "Unavailable" : "Checking...") : open ? "Shop Open" : "Shop Closed"}
     </span>
   );
 }
@@ -47,13 +50,13 @@ export function ShopOrderGate({ children }: { children: ReactNode }) {
   const status = useShopStatus();
 
   if (status.isPending) {
-    return <p role="status" className="p-6 text-center">Checking shop status...</p>;
+    return <div className="space-y-2 p-6 text-center"><p role="status">Checking shop status...</p><p className="text-xs text-muted-foreground">Please check your internet connection if this takes a moment.</p></div>;
   }
 
   if (status.isError || !status.data) {
     return (
       <section className="card-pg mx-4 space-y-3 text-center">
-        <p role="alert">Could not check shop status.</p>
+        <p role="alert">Could not check shop status. Check your internet connection and retry.</p>
         <Button onClick={() => void status.refetch()}>Retry</Button>
       </section>
     );
@@ -149,7 +152,7 @@ export function AdminShopStatus() {
         <div>
           <h2 className="font-semibold">Shop Status</h2>
           <p className="text-sm">
-            {!known ? "Checking status..." : status.data?.isOpen
+            {!known ? (status.isError ? "Status unavailable - retry below" : "Checking status...") : status.data?.isOpen
               ? "Open - accepting orders"
               : "Closed - new orders blocked"}
           </p>

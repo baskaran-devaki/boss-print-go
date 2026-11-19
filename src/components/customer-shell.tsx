@@ -83,20 +83,20 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
   const tabs = [{ key: "dashboard", to: "/" as const, label: t.dashboard, icon: LayoutDashboard }, { key: "status", to: "/status" as const, label: t.statusTab, icon: PackageCheck }, { key: "history", to: "/history" as const, label: t.history, icon: History }];
   return <div className="customer-app min-h-screen bg-background pb-28">
     <header className="sticky top-0 z-40 border-b border-border bg-card">
-      <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4 py-2">
-        <Link to="/" aria-label="BOSS PrintGo home" className="block w-24 max-w-full justify-self-start sm:w-28">
-          <img src="/boss-printgo-logo.png" alt="BOSS PrintGo" width="112" height="112" className="h-auto w-full object-contain" />
+      <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-0.5">
+        <Link to="/" aria-label="BOSS PrintGo home" className="block w-12 max-w-full justify-self-start">
+          <img src="/boss-printgo-logo.png" alt="BOSS PrintGo" width="48" height="48" className="h-auto w-full object-contain" />
         </Link>
-        <div className="flex min-w-0 flex-col items-center gap-2">
-          <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-primary"><Printer className="h-7 w-7" /></span>
-          <ShopStatusBadge />
+        <div className="flex min-w-0 flex-col items-center gap-0.5">
+          <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-lg bg-accent text-primary"><Printer className="h-4 w-4" /></span>
+          <ShopStatusBadge compact />
         </div>
-        <div className="flex min-w-0 flex-col items-end gap-1 self-start justify-self-end">
-          <Button variant="ghost" size="icon" className="h-11 w-11" disabled={busy} title={t.logout} aria-label={t.logout} onClick={() => void logout()}><LogOut className="h-5 w-5" /></Button>
-          <div className="[&_button]:min-h-11"><LangToggle /></div>
+        <div className="flex min-w-0 flex-col items-end gap-0 justify-self-end">
+          <Button variant="ghost" size="icon" className="h-6 w-8" disabled={busy} title={t.logout} aria-label={t.logout} onClick={() => void logout()}><LogOut className="h-4 w-4" /></Button>
+          <div className="[&_button]:h-5 [&_button]:min-h-0 [&_button]:px-2 [&_button]:py-0 [&_button]:text-[10px] [&_button]:leading-4"><LangToggle /></div>
         </div>
       </div>
-      <div className="boss-tagline-marquee mx-auto max-w-5xl pb-2 text-[11px] font-semibold tracking-wide text-primary/90"><p className="boss-tagline-track">{t.headerTagline}</p></div>
+      <div className="boss-tagline-marquee mx-auto max-w-5xl text-[10px] leading-3 font-semibold tracking-wide text-primary/90"><p className="boss-tagline-track">{t.headerTagline}</p></div>
     </header>
     <div className="mx-auto max-w-5xl px-4 pb-5 pt-6"><p className="text-xs text-muted-foreground">{t.welcome}</p><h1 className="mt-1 break-words font-display text-2xl font-bold">{customer.name}</h1><p className="mt-1 text-sm text-primary">{categories[customer.category]}</p>{error && <p role="alert" className="text-destructive">{error}</p>}</div>
     {children}
