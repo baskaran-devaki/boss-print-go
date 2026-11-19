@@ -1,3 +1,4 @@
+import { calculateOrderTotal, PLATFORM_FEE_BPS } from "@/lib/platform-fee";
 import { createCheckout, verifyCheckout, checkCheckout } from "@/lib/razorpay.functions";
 import { openCheckout, loadCheckout, CheckoutDismissed } from "@/lib/razorpay-checkout";
 import { ShopOrderGate } from "@/components/shop-status";
@@ -85,7 +86,7 @@ function PrintDashboard() {
   const [spiral, setSpiral] = useState(false);
   const name = customer?.name ?? "";
   const mobile = customer?.mobile ?? "";
-  const [order, setOrder] = useState<{ orderCode: string; trackingToken: string; totalAmount: number } | null>(null);
+  const [order, setOrder] = useState<{ orderCode: string; trackingToken: string; totalAmount: number; subtotalAmount: number; platformFeeAmount: number; platformFeeRateBps: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [stage, setStage] = useState<"uploading" | "submitting">("submitting");
   const [submitError, setSubmitError] = useState("");
@@ -97,7 +98,9 @@ function PrintDashboard() {
   const per = calculation?.rate;
   const binding = spiral && pages > 0 ? bindingCharge(pricingQuery.data.binding, pages, copies, sides) : null;
   const bindingMissing = spiral && pages > 0 && !binding;
-  const total = calculation && !bindingMissing ? (Math.round(calculation.amount * 100) + Math.round((binding?.amount ?? 0) * 100)) / 100 : undefined;
+  const subtotal = calculation && !bindingMissing ? (Math.round(calculation.amount * 100) + Math.round((binding?.amount ?? 0) * 100)) / 100 : undefined;
+  const amounts = subtotal === undefined ? undefined : calculateOrderTotal(subtotal);
+  const total = amounts?.totalAmount;
   const trackingUrl = order ? `${window.location.origin}/track?t=${order.trackingToken}` : "";
   useEffect(() => { setOrder(null); setSubmitError(""); }, [size, color, sides, pages, copies, per, spiral, total]);
 
@@ -283,8 +286,11 @@ function PrintDashboard() {
             <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.printedSides}</dt><dd aria-live="polite">{totalSides}</dd></div>
             {pricing && totalSides >= pricing.bulk_threshold && <div className="text-xs text-primary">{t.bulkApplied}</div>}
             {binding && <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.spiralPrice} (₹{binding.perSet.toFixed(2)} × {copies})</dt><dd>₹{binding.amount.toFixed(2)}</dd></div>}
+            <div className="flex justify-between border-t border-border pt-3"><dt className="text-muted-foreground">{t.subtotal}</dt><dd>{amounts ? `₹${amounts.subtotalAmount.toFixed(2)}` : "—"}</dd></div>
+            <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{t.platformFee} ({PLATFORM_FEE_BPS / 100}%)</dt><dd aria-live="polite">{amounts ? `₹${amounts.platformFeeAmount.toFixed(2)}` : "—"}</dd></div>
             <div className="flex justify-between border-t border-border pt-3 font-display text-2xl font-bold text-primary"><dt>{t.total}</dt><dd>{total === undefined ? "—" : `₹${total.toFixed(2)}`}</dd></div>
           </dl>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t.platformFeeNote}</p>
           {!pricing && <p role="alert" className="mt-3 text-sm text-destructive">{t.unavailable}</p>}
         </Card>
 
@@ -294,6 +300,8 @@ function PrintDashboard() {
               <p className="flex items-center gap-2 font-display text-lg font-bold text-primary"><Check className="h-5 w-5" />{t.orderPlaced}</p>
               <p className="text-muted-foreground">Payment confirmed. Your order has been placed.</p>
               <div className="rounded-xl bg-muted px-3 py-2"><p className="text-xs text-muted-foreground">{t.orderId}</p><p className="font-display text-xl font-bold">{order.orderCode}</p></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{t.subtotal}</span><span>₹{order.subtotalAmount.toFixed(2)}</span></div>
+              {order.platformFeeRateBps > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t.platformFee} ({order.platformFeeRateBps / 100}%)</span><span>₹{order.platformFeeAmount.toFixed(2)}</span></div>}
               <div className="flex justify-between"><span className="text-muted-foreground">{t.total}</span><span className="font-semibold">₹{order.totalAmount.toFixed(2)}</span></div>
               <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">{t.paymentCol}</span><span className="rounded-full bg-accent px-2 py-1 text-xs font-semibold text-primary">{paymentVerified ? "Payment verified" : t.paymentPending}</span></div>
               <div className="flex items-center justify-between gap-2 rounded-xl bg-muted px-3 py-2">

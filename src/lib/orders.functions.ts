@@ -1,3 +1,4 @@
+import { storedOrderAmounts } from "./platform-fee";
 import { uploadsExpired } from "./order-retention";
 import { createServerFn } from "@tanstack/react-start";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -89,7 +90,7 @@ export const getAdminOrders = createServerFn({ method: "GET" }).middleware([requ
     pages: o.pages,
     copies: o.copies,
     totalSides: Number(o.total_sides),
-    totalAmount: Number(o.total_amount),
+    ...storedOrderAmounts(o),
     utr: o.utr,
     filePaths: !uploadsExpired(o as unknown as { picked_up_at?: string; files_deleted_at?: string }) && Array.isArray(o.file_paths) ? (o.file_paths as string[]) : [],
     screenshotPath: uploadsExpired(o as unknown as { picked_up_at?: string; files_deleted_at?: string }) ? null : o.screenshot_path,

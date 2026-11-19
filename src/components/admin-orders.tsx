@@ -77,7 +77,7 @@ export function AdminOrders() {
                   <td className="py-3 pr-3 font-medium">{o.orderCode}</td>
                   <td className="pr-3">{o.customerName}<p className="text-xs text-muted-foreground">{o.mobile ?? "—"}</p></td>
                   <td className="pr-3">{o.service.toUpperCase()}<p className="text-xs text-muted-foreground">{o.paperSize} · {o.colorMode === "bw" ? t.bw : t.colorful} · <span className="font-semibold text-primary">{o.printSides === "double" ? t.double : t.single}</span>{o.spiralBinding && <> · <span className="font-semibold text-primary">{t.spiral} (₹{o.bindingAmount.toFixed(2)})</span></>} · {o.pages}×{o.copies} = {o.totalSides}</p></td>
-                  <td className="pr-3 font-semibold">₹{o.totalAmount.toFixed(2)}</td>
+                  <td className="pr-3 font-semibold">₹{o.totalAmount.toFixed(2)}{o.platformFeeRateBps > 0 && <div className="mt-1 space-y-1 text-xs font-normal text-muted-foreground"><p>{t.subtotal}: ₹{o.subtotalAmount.toFixed(2)}</p><p>{t.platformFee} ({o.platformFeeRateBps / 100}%): ₹{o.platformFeeAmount.toFixed(2)}</p></div>}</td>
                   <td className="pr-3 break-all">{o.utr ?? "—"}</td>
                   <td className="pr-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.cls}`}>{badge.label}</span>

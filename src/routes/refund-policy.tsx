@@ -15,11 +15,11 @@ function RefundPolicy() {
       <p>ரத்து செய்ய உடனே phone / email மூலம் தொடர்புகொள்ளவும். Order ID, payment reference, தொகை மற்றும் காரணம் கொடுக்கவும். OTP, UPI PIN அல்லது card password பகிர வேண்டாம்.</p>
     </Section>
     <Section title="2. Before printing starts / Print தொடங்குவதற்கு முன்">
-      <p>If we confirm cancellation before any printing/binding work has started, the paid order is eligible for a full refund. Please contact us promptly: payment confirmation can be followed by printing, and a cancellation request is not confirmed until the shop acknowledges that work has been stopped.</p>
+      <p>If we confirm cancellation before any printing/binding work has started, the paid order is eligible for a full refund, including the BOSS PrintGo platform fee. Please contact us promptly: payment confirmation can be followed by printing, and a cancellation request is not confirmed until the shop acknowledges that work has been stopped.</p>
       <p>Print / binding வேலை தொடங்குவதற்கு முன் cancellation-ஐ கடை உறுதி செய்தால் முழுத் தொகையும் refund செய்யத் தகுதி உண்டு. ரத்து கோரிக்கை அனுப்பியது மட்டுமே வேலை நிறுத்தப்பட்டதற்கான உறுதி அல்ல; கடையில் உறுதி செய்யவும்.</p>
     </Section>
     <Section title="3. After work starts and print errors / வேலை தொடங்கிய பிறகு">
-      <p>Change-of-mind cancellations and customer-supplied wrong files/settings are not normally refundable for work already completed correctly. If BOSS PrintGo made a printing/binding error, contact us promptly with the order reference and affected copies so we can assess a corrected reprint or a refund for the affected part. If we cannot fulfil a paid order, we will refund the unfulfilled portion; if no work was supplied, a full refund applies. Your applicable consumer rights remain unaffected.</p>
+      <p>Change-of-mind cancellations and customer-supplied wrong files/settings are not normally refundable for work already completed correctly. If BOSS PrintGo made a printing/binding error, contact us promptly with the order reference and affected copies so we can assess a corrected reprint or a refund for the affected part. If we cannot fulfil a paid order, we will refund the unfulfilled portion and the corresponding proportion of the BOSS PrintGo platform fee; if no work was supplied, a full refund applies. Your applicable consumer rights remain unaffected.</p>
       <p>சரியாக முடிக்கப்பட்ட வேலைக்கு customer file / settings தவறு அல்லது மனமாற்றம் காரணமாக பொதுவாக refund கிடையாது. எங்கள் தவறால் பிரச்சினை ஏற்பட்டால் பாதிக்கப்பட்ட copies-ஐச் சரிபார்த்து reprint அல்லது பொருந்தும் refund மூலம் தீர்வு வழங்குவோம். சேவை வழங்க முடியாத பகுதிக்கான பணம் திருப்பப்படும்.</p>
     </Section>
     <Section title="4. Failed, pending or duplicate payments / Payment பிரச்சினைகள்">

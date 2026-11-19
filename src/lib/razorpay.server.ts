@@ -1,3 +1,4 @@
+import { storedOrderAmounts } from "./platform-fee";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -34,7 +35,7 @@ export async function ownedOrder(token: string) {
   return data;
 }
 export function summary(order: any) {
-  return { orderCode: String(order.order_code), trackingToken: String(order.tracking_token), totalAmount: Number(order.total_amount), paid: order.payment_status === "verified" };
+  return { orderCode: String(order.order_code), trackingToken: String(order.tracking_token), ...storedOrderAmounts(order), paid: order.payment_status === "verified" };
 }
 // Both the browser verifier and webhook use the same amount/order/capture checks.
 export async function reconcile(order: any, payment: any) {

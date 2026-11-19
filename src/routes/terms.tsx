@@ -24,6 +24,8 @@ function Terms() {
     </Section>
     <Section title="4. Pricing and payment / விலை மற்றும் கட்டணம்">
       <p>The app displays the order total before checkout. Review the total before paying. The server checks the current price again when preparing payment; if prices changed, you must review the updated quote. Online payments are processed through Razorpay. Only a payment confirmed by our server is treated as a paid order.</p>
+      <p>BOSS PrintGo charges a 2.5% online-order platform fee on the print and binding subtotal, rounded to the nearest paise. The fee and final payable total are shown separately before payment. This is BOSS PrintGo's charge and is independent of Razorpay's actual merchant charges or promotional fee offers.</p>
+      <p>Print / binding சேவை மொத்தத்தில் 2.5% BOSS PrintGo platform fee சேர்க்கப்படும். Fee மற்றும் இறுதித் தொகை payment-க்கு முன் தனித்தனியாகக் காட்டப்படும்.</p>
       <p>Checkout-க்கு முன் காட்டப்படும் total-ஐப் பார்த்து payment செய்யவும். விலை மாறியிருந்தால் புதிய total-ஐ உறுதி செய்ய வேண்டும். Bank debit message மட்டும் order confirmation ஆகாது; payment verification தேவை.</p>
     </Section>
     <Section title="5. Processing and pickup / Print மற்றும் பெற்றுக்கொள்ளுதல்">

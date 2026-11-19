@@ -24,4 +24,8 @@ describe("Razorpay payment security", () => {
     const result = await reconcile({ razorpay_order_id: "order_example", total_amount: 10, payment_status: "pending_verification" }, { order_id: "order_example", currency: "INR", amount: 1000, status: "authorized" });
     expect(result.paid).toBe(false);
   });
+  it("rejects a captured subtotal-only payment when the stored total includes platform fee", async () => {
+    await expect(reconcile({ razorpay_order_id: "order_example", total_amount: 102.5 }, { order_id: "order_example", currency: "INR", amount: 10000, status: "captured" })).rejects.toThrow("does not match");
+  });
+
 });

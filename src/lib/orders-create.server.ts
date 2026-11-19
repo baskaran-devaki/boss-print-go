@@ -1,3 +1,4 @@
+import { calculateOrderTotal, PLATFORM_FEE_BPS } from "./platform-fee";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { bindingPaperCount } from "./pricing";
@@ -39,7 +40,9 @@ export async function createPrintOrder(data: z.infer<typeof checkoutOrderSchema>
       if (bindError || perSet === null || perSet === undefined) throw new Error("Spiral binding is unavailable for this paper count.");
       bindingAmount = (Math.round(Number(perSet) * 100) * data.copies) / 100;
     }
-    const totalAmount = (Math.round(Number(quote.total_amount) * 100) + Math.round(bindingAmount * 100)) / 100;
+    const subtotal = (Math.round(Number(quote.total_amount) * 100) + Math.round(bindingAmount * 100)) / 100;
+    const amounts = calculateOrderTotal(subtotal, gateway ? PLATFORM_FEE_BPS : 0);
+    const { totalAmount } = amounts;
     if (!Number.isFinite(totalAmount) || totalSides < 1) throw new Error("Could not calculate the order total. Please try again.");
     if (data.expectedTotal !== totalAmount) throw new Error("Price changed. Review the updated total and try again.");
     if (gateway && Math.round(totalAmount * 100) < 100) throw new Error("Online payment minimum is ₹1.");
@@ -62,6 +65,9 @@ export async function createPrintOrder(data: z.infer<typeof checkoutOrderSchema>
         binding_amount: bindingAmount,
         total_sides: totalSides,
         total_amount: totalAmount,
+        subtotal_amount: amounts.subtotalAmount,
+        platform_fee_amount: amounts.platformFeeAmount,
+        platform_fee_rate_bps: amounts.platformFeeRateBps,
         utr: data.utr ?? null,
         file_paths: data.filePaths,
         screenshot_path: data.screenshotPath ?? null,
@@ -69,5 +75,5 @@ export async function createPrintOrder(data: z.infer<typeof checkoutOrderSchema>
       .select("id, order_code, tracking_token")
       .single();
     if (error || !order) throw new Error("Could not submit the order. Please try again.");
-    return { id: order.id as string, orderCode: order.order_code, trackingToken: order.tracking_token, totalAmount };
+    return { id: order.id as string, orderCode: order.order_code, trackingToken: order.tracking_token, ...amounts };
 }

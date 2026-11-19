@@ -22,3 +22,5 @@
 - Razorpay checkout records are drafts until capture verification: filter unpaid gateway drafts out of admin lists, customer history/status and public tracking. Keep drafts internally for late webhook recovery; cancellation must reset the new-order form without saved-payment controls. Native Android checkout goes through the registered BossRazorpay bridge; never substitute a WebView checkout for UPI intent.
 
 - First admin pickup stamps immutable picked_up_at in the database. Customer history/tracking and new signed file links expire 24 hours later. A separately authenticated scheduled Storage API cleanup deletes uploads/screenshots and clears references only after successful deletion, preserving financial rows. Do not calculate retention from order creation or delete Storage metadata through SQL.
+
+- Online-order platform fee is a merchant fee of 250 basis points on print-plus-binding subtotal. Use the shared integer-paise calculation on client and server; persist subtotal/rate/fee snapshots, charge/verify the stored inclusive total, and never recompute historical payments with the current fee rate.

@@ -64,6 +64,9 @@ export type OrderSummary = {
   copies: number;
   totalSides: number;
   totalAmount: number;
+  subtotalAmount: number;
+  platformFeeAmount: number;
+  platformFeeRateBps: number;
   utr: string | null;
   filePaths: string[];
   screenshotPath: string | null;
