@@ -82,7 +82,22 @@ export function CustomerShell({ children, page }: { children: ReactNode; page: "
   </div>;
   const tabs = [{ key: "dashboard", to: "/" as const, label: t.dashboard, icon: LayoutDashboard }, { key: "status", to: "/status" as const, label: t.statusTab, icon: PackageCheck }, { key: "history", to: "/history" as const, label: t.history, icon: History }];
   return <div className="customer-app min-h-screen bg-background pb-28">
-    <header className="sticky top-0 z-40 border-b border-border bg-card"><div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3"><Link to="/" className="flex min-w-0 items-center gap-2 font-display text-lg font-bold text-primary"><Printer className="h-6 w-6 shrink-0" />BOSS PrintGo</Link><div className="flex shrink-0 items-center gap-1"><ShopStatusBadge /><LangToggle /><Button variant="ghost" size="icon" disabled={busy} title={t.switchCustomer} aria-label={t.switchCustomer} onClick={() => void logout()}><LogOut className="h-4 w-4" /></Button></div></div><div className="boss-tagline-marquee mx-auto max-w-5xl pb-2 text-[11px] font-semibold tracking-wide text-primary/90"><p className="boss-tagline-track">{t.headerTagline}</p></div></header>
+    <header className="sticky top-0 z-40 border-b border-border bg-card">
+      <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4 py-2">
+        <Link to="/" aria-label="BOSS PrintGo home" className="block w-24 max-w-full justify-self-start sm:w-28">
+          <img src="/boss-printgo-logo.png" alt="BOSS PrintGo" width="112" height="112" className="h-auto w-full object-contain" />
+        </Link>
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-primary"><Printer className="h-7 w-7" /></span>
+          <ShopStatusBadge />
+        </div>
+        <div className="flex min-w-0 flex-col items-end gap-1 self-start justify-self-end">
+          <Button variant="ghost" size="icon" className="h-11 w-11" disabled={busy} title={t.logout} aria-label={t.logout} onClick={() => void logout()}><LogOut className="h-5 w-5" /></Button>
+          <div className="[&_button]:min-h-11"><LangToggle /></div>
+        </div>
+      </div>
+      <div className="boss-tagline-marquee mx-auto max-w-5xl pb-2 text-[11px] font-semibold tracking-wide text-primary/90"><p className="boss-tagline-track">{t.headerTagline}</p></div>
+    </header>
     <div className="mx-auto max-w-5xl px-4 pb-5 pt-6"><p className="text-xs text-muted-foreground">{t.welcome}</p><h1 className="mt-1 break-words font-display text-2xl font-bold">{customer.name}</h1><p className="mt-1 text-sm text-primary">{categories[customer.category]}</p>{error && <p role="alert" className="text-destructive">{error}</p>}</div>
     {children}
     <nav aria-label="Customer navigation" className="customer-bottom-nav fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card"><div className="mx-auto grid max-w-xl grid-cols-3">{tabs.map(({ key, to, label, icon: Icon }) => <Link key={key} to={to} aria-current={page === key ? "page" : undefined} className={`flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 px-2 py-2 text-center text-xs font-semibold ${page === key ? "bg-accent text-primary" : "text-muted-foreground"}`}><Icon className="h-5 w-5" /><span className="break-words">{label}</span></Link>)}</div></nav>
