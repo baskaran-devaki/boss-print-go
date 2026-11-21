@@ -3,5 +3,5 @@ export const BUSINESS = {
   owner: "R. Baskaran",
   mobile: "9444918196",
   email: "onlineoffice.me@gmail.com",
-  Address: "No.169 Govindhasamy Street, Agaramel, Nazarathpet-600123.",
+  address: "No.169 Govindhasamy Street, Agaramel, Nazarathpet-600123.",
 } as const;
